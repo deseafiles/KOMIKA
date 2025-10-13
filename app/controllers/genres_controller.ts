@@ -1,0 +1,52 @@
+import Genre from '#models/genre'
+import { createGenreValidator } from '#validators/genre'
+import type { HttpContext } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
+
+export default class GenresController {
+  async index({ inertia, response, request }: HttpContext) {
+    if (app.inTest) return response.ok({ message: 'Page Loaded' })
+
+    if (request.accepts(['json'])) {
+      const getAllGenre = await Genre.all()
+
+      return response.ok({
+        data: getAllGenre,
+      })
+    }
+    return inertia.render('admin/genre')
+  }
+
+  async create({ inertia, response }: HttpContext) {
+    if (app.inTest) return response.ok({ message: 'Page Loaded' })
+    return inertia.render('admin/genre/create')
+  }
+
+  async store({ request, response, inertia }: HttpContext) {
+    const { name } = await request.validateUsing(createGenreValidator)
+
+    const genre = await Genre.firstOrCreate({
+      name,
+    })
+
+    if (request.accepts(['json'])) {
+      return response.ok({
+        message: 'Genre created successfully',
+        data: genre,
+      })
+    }
+
+    return inertia.render('admin/genre/store')
+  }
+
+  async destroy({ params, request, response }: HttpContext) {
+    const genre = await Genre.findOrFail(params.id)
+
+    await genre.delete()
+
+    if (request.accepts(['json'])) {
+      return response.ok({ message: 'Genre has been deleted' })
+    }
+  }
+}
+

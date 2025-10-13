@@ -9,7 +9,7 @@ export default class extends BaseSchema {
       table.string('username', 30).nullable().unique()
       table.string('email', 254).notNullable().unique()
       table.string('password').notNullable()
-      table.boolean('isAdmin').defaultTo(false).notNullable()
+      table.boolean('is_admin').defaultTo(false).notNullable()
       table.boolean('is_banned').defaultTo(false).nullable()
       table.boolean('is_deleted').defaultTo(false).nullable()
       table.timestamp('last_login_at').nullable()

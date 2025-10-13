@@ -8,9 +8,6 @@ export default class Genre extends BaseModel {
   @column()
   declare name: string
 
-  @column()
-  declare isDeleted: boolean
-
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

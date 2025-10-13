@@ -14,6 +14,7 @@ import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 import HomeController from '#controllers/home_controller'
 import LogoutController from '#controllers/auth/logout_controller'
+import GenresController from '#controllers/genres_controller'
 
 router.get('/', [HomeController, 'index']).as('home')
 
@@ -34,3 +35,14 @@ router
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
   })
   .prefix('/comic')
+
+router
+  .group(() => {
+    router.get('/index', [GenresController, 'index'])
+    router.post('/create', [GenresController, 'create'])
+    router.post('/store', [GenresController, 'store'])
+    router.delete('/destroy/:id', [GenresController, 'destroy'])
+  })
+  .prefix('/genre')
+  .use(middleware.auth())
+  .use(middleware.isAdmin())
