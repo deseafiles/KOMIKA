@@ -39,6 +39,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare isDeleted: boolean
 
+  @column()
+  declare lastLoginAt: DateTime
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
