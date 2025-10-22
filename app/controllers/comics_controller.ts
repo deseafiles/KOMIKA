@@ -9,7 +9,7 @@ export default class ComicsController {
    * Display a list of resource
    */
   async index({ inertia, response }: HttpContext) {
-    if (app.inTest) return response.ok({ message: 'Page Loaded' })
+    const listComicByCreator = await Comic.query().where
     return inertia.render('home')
   }
 
