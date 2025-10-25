@@ -5,12 +5,12 @@ export const createEpisodeValidator = vine.compile(
     comicId: vine.number(),
     title: vine.string().maxLength(30).optional(),
     episodeNumber: vine.number(),
-    publishedAt: vine.date({formats: {utc: true}}),
+    publishedAt: vine.string(),
     thumbnailUrl: vine
       .file({
         size: '2mb',
         extnames: ['jpg', 'jpeg', 'png', 'webp'],
       }),
-    coinPrice: vine.number().min(0)
+    coinPrice: vine.number()
   })
 )

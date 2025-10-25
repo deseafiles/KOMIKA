@@ -117,15 +117,12 @@ export default class Episode extends BaseModel {
 
   @beforeSave()
   static async changeIsPublish(episode: Episode) {
-    if (!episode.publishedAt) return
+    if (!episode.publishedAt) {
+      episode.isPublished = false
+      return
+    }
 
     const now = DateTime.now()
-
-    const publishedUtc = episode.publishedAt.toUTC()
-    const diffInSeconds = Math.abs(now.toUTC().diff(publishedUtc, 'seconds').seconds)
-
-    if (diffInSeconds < 5) {
-      episode.isPremium = true
-    }
+    episode.isPublished = episode.publishedAt <= now
   }
 }

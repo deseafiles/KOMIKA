@@ -1,6 +1,5 @@
 import Comic from '#models/comic'
 import Creator from '#models/creator'
-import Genre from '#models/genre'
 import { CreatorService } from '#services/creator_service'
 import { createComicValidator } from '#validators/comic'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -33,7 +32,7 @@ async index({ inertia, auth }: HttpContext) {
 
     //buat pengecekan creator udah ada atau engga, kalo engga buat creator baru, kalo udah ada langsung buat komiknya aja
     const coverUrl = request.file('coverUrl', {
-      size: '2mb',
+      size: '5mb',
       extnames: ['jpg', 'png', 'jpeg', 'webp'],
     })
 
@@ -57,7 +56,6 @@ async index({ inertia, auth }: HttpContext) {
     if (genreIds && genreIds.length > 0) {
       await comic.related('comicGenres').attach(genreIds)
     }
-    await comic.related('comicGenres').attach(genreIds)
 
     if (request.accepts(['json'])) {
       return response.ok({
@@ -81,10 +79,9 @@ async index({ inertia, auth }: HttpContext) {
   async show({ params, inertia  }: HttpContext) {
     const comic = await Comic
                        .query()
-                       .where('id', params.id)
+                       .where('slug', params.slug)
                        .preload('episodes', episodeQuery => {
-                         episodeQuery.where('id', params.id)
-                         .orderBy('episodeNumber', 'asc')
+                         episodeQuery.orderBy('episodeNumber', 'asc')
                        })
                        .preload('creators')
                        .firstOrFail()
@@ -95,11 +92,11 @@ async index({ inertia, auth }: HttpContext) {
    * Edit individual record
    */
 
-async edit({ params, inertia }: HttpContext) {
-  const creator = await Creator.query().firstOrFail()
+async edit({ params, inertia, auth }: HttpContext) {
+  const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
 
   const comic = await Comic.query()
-    .where('id', params.id)
+    .where('slug', params.slug)
     .where('creator_id', creator.id)
     .firstOrFail()
 
@@ -109,8 +106,10 @@ async edit({ params, inertia }: HttpContext) {
    * Handle form submission for the edit action
   */
 
-  async update({ params, response, request }: HttpContext) {
-    const comic = await Comic.findOrFail(params.id)
+  async update({ params, response, request, auth }: HttpContext) {
+    const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+
+    const comic = await Comic.query().where('slug', params.slug).where('creator_id', creator.id).firstOrFail()
 
     const payload = request.only(['title', 'description', 'status', 'coverUrl', 'updateDay'])
 
@@ -122,8 +121,10 @@ async edit({ params, inertia }: HttpContext) {
   /**
    * Delete record
    */
-  async destroy({ params, response }: HttpContext) {
-    const comic = await Comic.findOrFail(params.id)
+  async destroy({ params, response, auth }: HttpContext) {
+    const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+
+    const comic = await Comic.query().where('slug', params.slug).where('creator_id', creator.id).firstOrFail()
 
     await comic.delete()
 

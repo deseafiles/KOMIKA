@@ -16,6 +16,7 @@ import HomeController from '#controllers/home_controller'
 import LogoutController from '#controllers/auth/logout_controller'
 import GenresController from '#controllers/genres_controller'
 import CoinPackagesController from '#controllers/coin_packages_controller'
+import EpisodesController from '#controllers/episodes_controller'
 
 router.get('/', [HomeController, 'index']).as('home')
 
@@ -35,11 +36,26 @@ router
     router.get('/create', [ComicsController, 'create']).use(middleware.auth())
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
     router.get('/show/:slug', [ComicsController, 'show']).use(middleware.auth())
-    router.get('/update/:slug', [ComicsController, 'update']).use(middleware.auth())
-    router.put('/edit', [ComicsController, 'edit']).use(middleware.auth())
+    router.put('/update/:slug', [ComicsController, 'update']).use(middleware.auth())
+    router.get('/edit', [ComicsController, 'edit']).use(middleware.auth())
     router.delete('/destroy/:slug', [ComicsController, 'destroy']).use(middleware.auth())
   })
   .prefix('/comic')
+
+router.group(() => {
+  router.get('episodes', 'EpisodesController.index')
+  router.get('episodes/create', 'EpisodesController.create')
+  router.post('/episodes/store', [EpisodesController, 'store'])
+  router.get('episodes/:id/edit', 'EpisodesController.edit')
+  router.put('episodes/update/:id', [EpisodesController, 'update'])
+  router.delete('episodes/:id', 'EpisodesController.destroy')
+})
+  .prefix('/creator')
+  .use(middleware.auth())
+
+// 🌍 Public reader routes
+//Route.get('/comics/:slug/episodes', 'EpisodesController.listByComic')
+//Route.get('/episodes/:id', 'EpisodesController.showPublic')
 
 router
   .group(() => {
