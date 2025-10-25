@@ -1,4 +1,6 @@
 import Comic from '#models/comic'
+import Creator from '#models/creator'
+import Genre from '#models/genre'
 import { CreatorService } from '#services/creator_service'
 import { createComicValidator } from '#validators/comic'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -8,35 +10,37 @@ export default class ComicsController {
   /**
    * Display a list of resource
    */
-  async index({ inertia, response }: HttpContext) {
-    const listComicByCreator = await Comic.query().where
-    return inertia.render('home')
-  }
+async index({ inertia, auth }: HttpContext) {
+  const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+
+  const listComicByCreator = await Comic.query().where('creator_id', creator.id)
+  return inertia.render('comic/index', { listComicByCreator })
+}
 
   /**
    * Display form to create a new record
    */
   async create({ response, inertia }: HttpContext) {
     if (app.inTest) return response.ok({ message: 'Page Loaded' })
-    return inertia.render('test/comic/create')
+    return inertia.render('comic/create')
   }
 
   /**
    * Handle form submission for the create action
    */
-  async store({ request, response, auth, inertia }: HttpContext) {
-    const { title, description } = await request.validateUsing(createComicValidator)
+  async store({ request, response, auth }: HttpContext) {
+    const { title, description, genreIds } = await request.validateUsing(createComicValidator)
 
     //buat pengecekan creator udah ada atau engga, kalo engga buat creator baru, kalo udah ada langsung buat komiknya aja
     const coverUrl = request.file('coverUrl', {
-      size: '5mb',
+      size: '2mb',
       extnames: ['jpg', 'png', 'jpeg', 'webp'],
     })
 
     let coverPath: string | null = null
     if (coverUrl && coverUrl.isValid) {
-      await coverUrl.move(app.makePath('storage/metadata'))
-      coverPath = `/cover-url/${coverUrl.fileName}`
+      await coverUrl.move(app.makePath('storage/metadata/coverUrl'))
+      coverPath = `/storage/metadata/coverUrl/${coverUrl.fileName}`
     } else if (coverUrl && !coverUrl.isValid) {
       return response.badRequest({ errors: coverUrl.errors })
     }
@@ -50,18 +54,20 @@ export default class ComicsController {
       coverUrl: coverPath,
     })
 
+    if (genreIds && genreIds.length > 0) {
+      await comic.related('comicGenres').attach(genreIds)
+    }
+    await comic.related('comicGenres').attach(genreIds)
+
     if (request.accepts(['json'])) {
       return response.ok({
         message: 'Comic created successfully',
         data: comic,
+        genreIds
       })
     }
 
-    if (app.inTest) {
-      return response.json({ message: 'Comic created successfully', data: comic })
-    }
-
-    return inertia.render('test/comic/store')
+    return response.redirect().toRoute('/comic/index')
   }
 
   async showCoverImage({ response, params }: HttpContext) {
@@ -69,26 +75,58 @@ export default class ComicsController {
   }
   /**
    * Show individual record
+   * ini yang pas kita pencet 1 comic bakal nampilin detail comicnya
+   * return detail comic, jumlah like, jumlah pembaca, episode
    */
-  async show({ params }: HttpContext) {}
+  async show({ params, inertia  }: HttpContext) {
+    const comic = await Comic
+                       .query()
+                       .where('id', params.id)
+                       .preload('episodes', episodeQuery => {
+                         episodeQuery.where('id', params.id)
+                         .orderBy('episodeNumber', 'asc')
+                       })
+                       .preload('creators')
+                       .firstOrFail()
+
+    return inertia.render('comic/show', { comic })
+  }
   /**
    * Edit individual record
    */
-  async edit({ params }: HttpContext) {}
 
+async edit({ params, inertia }: HttpContext) {
+  const creator = await Creator.query().firstOrFail()
+
+  const comic = await Comic.query()
+    .where('id', params.id)
+    .where('creator_id', creator.id)
+    .firstOrFail()
+
+  return inertia.render('comic/edit', { comic })
+}
   /**
    * Handle form submission for the edit action
-
-  async update({ params, request, response }: HttpContext) {
-    if (app.inTest) return response.ok({ message: 'Page Loaded' })
-
-    const comic
-    return inertia.render('/test/comic/update')
-  }
   */
+
+  async update({ params, response, request }: HttpContext) {
+    const comic = await Comic.findOrFail(params.id)
+
+    const payload = request.only(['title', 'description', 'status', 'coverUrl', 'updateDay'])
+
+    await comic.merge(payload).save()
+
+    return response.redirect().back()
+  }
 
   /**
    * Delete record
    */
-  async destroy({ params }: HttpContext) {}
+  async destroy({ params, response }: HttpContext) {
+    const comic = await Comic.findOrFail(params.id)
+
+    await comic.delete()
+
+    return response.redirect().back()
+  }
 }

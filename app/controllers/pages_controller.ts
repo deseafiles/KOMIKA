@@ -1,24 +1,11 @@
+import Creator from '#models/creator'
 import Page from '#models/page'
-import { createPagesValidator } from '#validators/comic'
+import { createPagesValidator } from '#validators/page'
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import sharp from 'sharp'
 
 export default class PagesController {
-  /*
-   *
-   */
-  async index({ inertia, response, request }: HttpContext) {
-    const pages = await Page.query().orderBy('pageNumber', 'asc')
-
-    if (request.accepts(['json'])) {
-      return response.ok({
-        message: 'Page Loaded',
-        data: pages,
-      })
-    }
-    return inertia.render('pages/index')
-  }
   /**
    * Display form to create a new record
    */
@@ -71,7 +58,9 @@ export default class PagesController {
       const page = await Page.create({
         episodeId,
         pageNumber: pageNumber + index,
-        imageUrl: `/pages/${fileName}`,
+        imageUrl: `/storage/pages/${fileName}`,
+        imageHeight,
+        imageWidth
       })
 
       createdPages.push(page)
@@ -89,27 +78,43 @@ export default class PagesController {
   /**
    * Show individual record
    */
-  async show({ params }: HttpContext) {}
 
   /**
    * Edit individual record
    */
-  async edit({ params }: HttpContext) {}
+  async edit({ params, inertia, auth }: HttpContext) {
+    const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+
+    const pages = await Page.query().where('episode_id', params.id).preload('episodes', (episodeQuery) => {
+      episodeQuery.where('creator_id', creator.id)
+    })
+    .firstOrFail()
+
+    return inertia.render('pages/edit',  { pages })
+  }
 
   /**
    * Handle form submission for the edit action
    */
-  async update({ params, request }: HttpContext) {}
+  async update({ params, request, response }: HttpContext) {
+    const page = await Page.findOrFail(params.id)
+
+    const payload = request.only(['pageNumber', 'imageUrl'])
+
+    await page.merge(payload).save()
+
+    return response.redirect().back()
+  }
 
   /**
    * Delete record
    */
-  async destroy({ response }: HttpContext) {
-    const deletedCount = await Page.query().delete()
+  async destroy({ response, params }: HttpContext) {
+    const page = await Page.findOrFail(params.id)
 
-    return response.ok({
-      message: `All pages deleted successfully (${deletedCount} records)`,
-    })
+    await page.delete()
+
+    return response.redirect().back()
   }
 }
 

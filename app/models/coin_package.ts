@@ -15,7 +15,7 @@ export default class CoinPackage extends BaseModel {
   declare price: number
 
   @column()
-  declare bonusCoin: number
+  declare bonusCoin: number | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

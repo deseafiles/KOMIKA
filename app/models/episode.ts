@@ -6,6 +6,9 @@ import {
   column,
   beforeCreate,
   beforeUpdate,
+  afterCreate,
+  afterUpdate,
+  beforeSave,
 } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Comic from './comic.js'
@@ -21,7 +24,7 @@ export default class Episode extends BaseModel {
   declare comicId: number
 
   @column()
-  declare title: string
+  declare title: string | null
 
   @column()
   declare slug: string
@@ -105,5 +108,24 @@ export default class Episode extends BaseModel {
     }, [])
     const increment = incrementors.length ? Math.max(...incrementors) + 1 : 1
     episode.slug = `${slug}-${increment}`
+  }
+
+  @beforeSave()
+  static async changePremiumEpisode(episode: Episode) {
+    episode.isPremium = episode.coinPrice > 0
+  }
+
+  @beforeSave()
+  static async changeIsPublish(episode: Episode) {
+    if (!episode.publishedAt) return
+
+    const now = DateTime.now()
+
+    const publishedUtc = episode.publishedAt.toUTC()
+    const diffInSeconds = Math.abs(now.toUTC().diff(publishedUtc, 'seconds').seconds)
+
+    if (diffInSeconds < 5) {
+      episode.isPremium = true
+    }
   }
 }

@@ -14,7 +14,7 @@ export default class GenresController {
         data: getAllGenre,
       })
     }
-    return inertia.render('admin/genre')
+    return inertia.render('admin/genre/index')
   }
 
   async create({ inertia, response }: HttpContext) {
@@ -22,7 +22,7 @@ export default class GenresController {
     return inertia.render('admin/genre/create')
   }
 
-  async store({ request, response, inertia }: HttpContext) {
+  async store({ request, response }: HttpContext) {
     const { name } = await request.validateUsing(createGenreValidator)
 
     const genre = await Genre.firstOrCreate({
@@ -36,7 +36,7 @@ export default class GenresController {
       })
     }
 
-    return inertia.render('admin/genre/store')
+    return response.redirect().toRoute('/admin/genre/index')
   }
 
   async destroy({ params, request, response }: HttpContext) {
@@ -47,6 +47,8 @@ export default class GenresController {
     if (request.accepts(['json'])) {
       return response.ok({ message: 'Genre has been deleted' })
     }
+
+    return response.redirect().toRoute('/admin/genre/index')
   }
 }
 

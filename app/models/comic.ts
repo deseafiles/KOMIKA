@@ -6,12 +6,13 @@ import {
   column,
   belongsTo,
   hasMany,
+  manyToMany,
 } from '@adonisjs/lucid/orm'
 import string from '@adonisjs/core/helpers/string'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Episode from './episode.js'
-import User from './user.js'
 import Creator from './creator.js'
+import Genre from './genre.js'
 
 export default class Comic extends BaseModel {
   @column({ isPrimary: true })
@@ -33,6 +34,8 @@ export default class Comic extends BaseModel {
   declare coverUrl: string | null
 
   @column()
+  declare status: string
+  @column()
   declare updateDay: string
 
   @column()
@@ -51,6 +54,12 @@ export default class Comic extends BaseModel {
     foreignKey: 'comicId',
   })
   declare episodes: HasMany<typeof Episode>
+
+  @manyToMany(() => Genre, {
+    pivotTable: 'comic_genres',
+    pivotTimestamps: true,
+  })
+  declare comicGenres: ManyToMany<typeof Genre>
 
   @beforeCreate()
   @beforeUpdate()

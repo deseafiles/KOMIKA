@@ -19,9 +19,9 @@ export const AdminFactory = factory
 export const NormalUserFactory = factory
   .define(User, async ({ faker }) => {
     return {
-      email: faker.internet.email(),
-      username: faker.internet.username(),
-      password: 'User123',
+      email: 'aly123@gmail.com',
+      username: 'aly123',
+      password: '12345678',
       isAdmin: false,
       isBanned: false,
       isDeleted: false,

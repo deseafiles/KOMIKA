@@ -15,10 +15,11 @@ import { middleware } from './kernel.js'
 import HomeController from '#controllers/home_controller'
 import LogoutController from '#controllers/auth/logout_controller'
 import GenresController from '#controllers/genres_controller'
+import CoinPackagesController from '#controllers/coin_packages_controller'
 
 router.get('/', [HomeController, 'index']).as('home')
 
-router.get('comic/coverUrl/:fileName', [ComicsController, 'showCoverImage']).use(middleware.auth())
+router.get('/comic/coverUrl/:fileName', [ComicsController, 'showCoverImage']).use(middleware.auth())
 
 router.group(() => {
   router.get('/register', [RegisterController, 'index'])
@@ -31,8 +32,12 @@ router.group(() => {
 router
   .group(() => {
     router.get('/index', [ComicsController, 'index'])
-    router.post('/create', [ComicsController, 'create']).use(middleware.auth())
+    router.get('/create', [ComicsController, 'create']).use(middleware.auth())
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
+    router.get('/show/:slug', [ComicsController, 'show']).use(middleware.auth())
+    router.get('/update/:slug', [ComicsController, 'update']).use(middleware.auth())
+    router.put('/edit', [ComicsController, 'edit']).use(middleware.auth())
+    router.delete('/destroy/:slug', [ComicsController, 'destroy']).use(middleware.auth())
   })
   .prefix('/comic')
 
@@ -46,3 +51,30 @@ router
   .prefix('/genre')
   .use(middleware.auth())
   .use(middleware.isAdmin())
+
+//DONE TESTING USING POSTMAN
+router
+  .group(() => {
+    router.get('/index', [CoinPackagesController, 'index'])
+    router.post('/create', [CoinPackagesController, 'create'])
+    router.post('/store', [CoinPackagesController, 'store'])
+    router.get('/edit/:id', [CoinPackagesController, 'edit'])
+    router.put('/update/:id', [CoinPackagesController, 'update'])
+    router.delete('/destroy/:id', [CoinPackagesController, 'destroy'])
+    router.get('/show/:id', [CoinPackagesController, 'show'])
+  })
+  .prefix('/coin')
+
+
+router.post('/midtrans/test', async ({ response }) => {
+  const service = new (await import('#services/midtrans_service')).MidtransService()
+
+  const token = await service.createTransaction({
+    id: 1,
+    name: 'Packet 1',
+    price: 15000,
+  })
+
+  return response.json({ token })
+})
+
