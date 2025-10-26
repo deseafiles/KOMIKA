@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
 import CoinPackage from './coin_package.js'
 
+//mencatat pembelian coin, berhubungan dengan midtrans
 export default class Transaction extends BaseModel {
   @column({ isPrimary: true })
   declare id: number

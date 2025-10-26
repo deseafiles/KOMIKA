@@ -6,9 +6,14 @@ interface Genre {
   name: string
 }
 
+interface User {
+  id: number
+  username: string
+}
+
 interface Creator {
   id: number
-  name: string
+  users: User
 }
 
 interface Comic {
@@ -29,6 +34,7 @@ const props = defineProps<{
 
 <template>
   <Head title="Home" />
+    <!--<pre>{{ props.allComic }}</pre> -->
 
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Daftar Komik</h1>
@@ -73,7 +79,7 @@ const props = defineProps<{
           </div>
 
           <div class="mt-2 text-xs text-gray-600 dark:text-gray-300">
-            <span>👤 {{ comic.creators?.name || 'Unknown' }}</span>
+            <span>👤 {{ comic.creators?.users?.username }}</span>
           </div>
 
           <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">

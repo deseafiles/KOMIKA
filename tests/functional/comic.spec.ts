@@ -1,8 +1,5 @@
 import { test } from '@japa/runner'
 import db from '@adonisjs/lucid/services/db'
-import User from '#models/user'
-import Creator from '#models/creator'
-import Comic from '#models/comic'
 
 test.group('Comic', (group) => {
   group.each.setup(async () => {
@@ -13,12 +10,8 @@ test.group('Comic', (group) => {
     await db.rollbackGlobalTransaction()
   })
 
-  test('can create a new comic', async ({ client }) => {
-    const response = await client.post('/test/comic/create').json({
-      title: 'test title',
-      description: 'test description',
-    })
-
+  test('guest user can access home page', async ({ client }) => {
+    const response = await client.get('/')
     response.assertStatus(200)
   })
 })

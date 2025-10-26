@@ -30,9 +30,10 @@ router.group(() => {
   router.post('/logout', [LogoutController, 'handle']).use(middleware.auth())
 })
 
+//done, harusnya
 router
   .group(() => {
-    router.get('/index', [ComicsController, 'index'])
+    router.get('/index', [ComicsController, 'index']).use(middleware.guest())
     router.get('/create', [ComicsController, 'create']).use(middleware.auth())
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
     router.get('/show/:slug', [ComicsController, 'show']).use(middleware.auth())
@@ -42,6 +43,7 @@ router
   })
   .prefix('/comic')
 
+//fix route
 router.group(() => {
   router.get('episodes', 'EpisodesController.index')
   router.get('episodes/create', 'EpisodesController.create')
