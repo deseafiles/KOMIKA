@@ -182,19 +182,37 @@ export default class EpisodesController {
   /**
    * Show single published episode to reader
    */
-  async showPublic({ params, inertia }: HttpContext) {
-    const episode = await Episode
-      .query()
-      .where('id', params.id)
-      .whereNotNull('published_at')
-      .preload('pages', (pagesQuery) =>
-        pagesQuery.orderBy('page_number', 'asc')
-      )
-      .preload('comics', (comicQuery) =>
-        comicQuery.preload('comicGenres')
-      )
-      .firstOrFail()
+async showPublic({ params, inertia, auth }: HttpContext) {
+  // Ambil episode yang dipublikasikan
+  const episode = await Episode
+    .query()
+    .where('id', params.id)
+    .whereNotNull('published_at')
+    .preload('pages', (pagesQuery) => pagesQuery.orderBy('page_number', 'asc'))
+    .preload('comics', (comicQuery) => comicQuery.preload('comicGenres'))
+    .firstOrFail()
 
-    return inertia.render('episode/show', { episode })
+  const user = auth.user
+  if (user) {
+    const read = await user.related('userReads').query().where('episode_id', params.id).first()
+
+    if (!read) {
+      await user.related('userReads').attach([params.id])
+    }
   }
+
+  return inertia.render('episode/show', { episode })
+}
+
+  async likeEpisode({ params, auth }: HttpContext) {
+    const user = auth.user!
+    const like = await user.related('userLikes').query().where('episode_id', params.id).first()
+
+    if(like) {
+      await user.related('userLikes').detach([params.id])
+    } else {
+      await user.related('userLikes').attach([params.id])
+    }
+  }
+
 }

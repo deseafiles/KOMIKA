@@ -8,7 +8,6 @@ export default class extends BaseSchema {
       table.increments('id')
       table.integer('user_id').unsigned().references('users.id').onDelete('CASCADE')
       table.integer('episode_id').unsigned().references('episodes.id').onDelete('CASCADE')
-      table.boolean('is_like').defaultTo(true)
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

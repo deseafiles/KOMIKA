@@ -1,0 +1,38 @@
+import type { HttpContext } from '@adonisjs/core/http'
+
+import Comic from '#models/comic'
+import User from '#models/user'
+import Purchase from '#models/purchase'
+
+export default class DashboardAdminsController {
+  async index({ inertia }: HttpContext) {
+    // Hitung jumlah comic (yang tidak dihapus)
+    const comicCountRow = await Comic.query()
+      .where('isDeleted', false)
+      .count('id', 'count')
+      .first()
+
+    // Hitung jumlah user aktif (bukan admin, tidak dibanned)
+    const userCountRow = await User.query()
+      .where('isAdmin', false)
+      .where('isBanned', false)
+      .count('id', 'count')
+      .first()
+
+    // Hitung total pendapatan platform
+    const totalRevenueRow = await Purchase.query()
+      .sum('platformShare', 'total')
+      .first()
+
+    // Pastikan semua nilai dikonversi jadi number
+    const comicCount = Number(comicCountRow?.$extras?.count || 0)
+    const userCount = Number(userCountRow?.$extras?.count || 0)
+    const totalRevenue = Number(totalRevenueRow?.$extras?.total || 0)
+
+    return inertia.render('admin/Dashboard/index', {
+      comicCount,
+      userCount,
+      totalRevenue,
+    })
+  }
+}

@@ -28,6 +28,6 @@ export default class UserWalet extends BaseModel {
   @belongsTo(() => User, {
     foreignKey: 'userId',
   })
-  declare user_walets: BelongsTo<typeof User>
+  declare userWallet: BelongsTo<typeof User>
 }
 

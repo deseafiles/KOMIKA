@@ -6,15 +6,15 @@ import {
   column,
   beforeCreate,
   beforeUpdate,
-  afterCreate,
-  afterUpdate,
   beforeSave,
+  manyToMany,
 } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Comic from './comic.js'
 import Page from './page.js'
 import Purchase from './purchase.js'
 import string from '@adonisjs/core/helpers/string'
+import User from './user.js'
 
 export default class Episode extends BaseModel {
   @column({ isPrimary: true })
@@ -68,6 +68,15 @@ export default class Episode extends BaseModel {
   })
   declare pages: HasMany<typeof Page>
 
+  @manyToMany(() => User, {
+    pivotTable: 'episode_likes'
+  })
+  declare episodeLikes: ManyToMany<typeof User>
+
+  @manyToMany(() => User, {
+    pivotTable: 'episode_reads'
+  })
+  declare episodeReads: ManyToMany<typeof User>
   /*many to many
    * purchase, comment,
    */

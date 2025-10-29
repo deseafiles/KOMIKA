@@ -16,6 +16,10 @@ export default class extends BaseSchema {
       table.timestamp('created_at').nullable()
       table.timestamp('updated_at').nullable()
     })
+
+    this.schema.alterTable(this.tableName, (table) => {
+      table.boolean('is_verified').defaultTo(false).notNullable()
+    })
   }
 
   async down() {

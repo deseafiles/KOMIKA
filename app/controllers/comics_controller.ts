@@ -84,6 +84,9 @@ async index({ inertia, auth }: HttpContext) {
                          episodeQuery.orderBy('episodeNumber', 'asc')
                        })
                        .preload('creators')
+                       .preload('comicGenres')
+                       .preload('comicRatings')
+                       .preload('comicFavorites')
                        .firstOrFail()
 
     return inertia.render('comic/show', { comic })
@@ -130,4 +133,46 @@ async edit({ params, inertia, auth }: HttpContext) {
 
     return response.redirect().back()
   }
+
+async rate({ params, auth, request, response }: HttpContext) {
+  const user = auth.user!
+  const ratingValue = Number(request.input('rating_value'))
+
+  if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5) {
+    return response.badRequest({ message: 'Invalid rating value (0–5)' })
+  }
+
+  // cek apakah user sudah pernah kasih rating
+  const existing = await user
+    .related('userRating')
+    .query()
+    .where('comic_id', params.id)
+    .first()
+
+  if (existing) {
+    // update rating di pivot
+    await user.related('userRating').sync({
+      [params.id]: { rating_value: ratingValue },
+    }, false) // false artinya jangan detach data lain
+  } else {
+    // buat rating baru
+    await user.related('userRating').attach({
+      [params.id]: { rating_value: ratingValue },
+    })
+  }
+
+  return response.ok({ message: 'Rating saved successfully' })
+}
+
+  async favorite({ params, response, auth}: HttpContext){
+    const user = auth.user!
+    const favorite = await user.related('userFavorites').query().where('comic_id', params.id).first()
+
+    if(favorite) {
+      await user.related('userFavorites').detach([params.id])
+    } else{
+      await user.related('userFavorites').attach([params.id])
+    }
+  }
+
 }

@@ -12,6 +12,7 @@ import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relat
 import Episode from './episode.js'
 import Creator from './creator.js'
 import Genre from './genre.js'
+import User from './user.js'
 
 export default class Comic extends BaseModel {
   @column({ isPrimary: true })
@@ -60,6 +61,16 @@ export default class Comic extends BaseModel {
     pivotTimestamps: true,
   })
   declare comicGenres: ManyToMany<typeof Genre>
+
+  @manyToMany(() => User, {
+    pivotTable: 'comic_ratings',
+  })
+  declare comicRatings: ManyToMany<typeof User>
+
+  @manyToMany(() => User, {
+    pivotTable: 'comic_favorites'
+  })
+  declare comicFavorites: ManyToMany<typeof User>
 
   @beforeSave()
   static async slugify(comic: Comic) {

@@ -11,16 +11,16 @@ export default class CoinPackagesController {
    * Display a list of resource
    */
   async index({ inertia }: HttpContext) {
-    const coin_package = await CoinPackage.all()
+    const coinPackage = await CoinPackage.all()
 
-    return inertia.render('coin/index', {coin_package})
+    return inertia.render('admin/CoinPackages/index', {coinPackage})
   }
 
   /**
    * Display form to create a new record
    */
   async create({ inertia }: HttpContext) {
-    return inertia.render('coin/create')
+    return inertia.render('admin/CoinPackages/create')
   }
 
   /**
@@ -43,25 +43,19 @@ export default class CoinPackagesController {
       })
     }
 
-    return response.redirect().toRoute('/coin/index')
+    return response.redirect().toRoute('admin/CoinPackages/index')
   }
 
   /**
    * Show individual record
    */
-  async show({ params, inertia, request,response }: HttpContext) {
+  async show({ params, inertia }: HttpContext) {
     const coin = await CoinPackage
                       .query()
                       .where('id', params.id)
                       .firstOrFail()
-    if (request.accepts(['json'])) {
-      return response.ok({
-        message: 'Coin package created successfully',
-        data: coin,
-      })
-    }
 
-    return inertia.render('comic/show', { coin })
+    return inertia.render('admin/CoinPackages/show', { coin })
   }
 
   /**
@@ -73,7 +67,7 @@ export default class CoinPackagesController {
                       .where('id', params.id)
                       .firstOrFail()
 
-    return inertia.render('coin/edit', {coin})
+    return inertia.render('admin/CoinPackages/edit', {coin})
   }
 
   /**
@@ -96,6 +90,6 @@ export default class CoinPackagesController {
 
     await coin.delete()
 
-    return response.redirect().back()
+    return response.redirect().toRoute('/admin/coin/index')
   }
 }

@@ -4,22 +4,15 @@ import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 
 export default class GenresController {
-  async index({ inertia, response, request }: HttpContext) {
-    if (app.inTest) return response.ok({ message: 'Page Loaded' })
+  async index({ inertia }: HttpContext) {
+    const genre = await Genre.query().select(['name'])
 
-    if (request.accepts(['json'])) {
-      const getAllGenre = await Genre.all()
-
-      return response.ok({
-        data: getAllGenre,
-      })
-    }
-    return inertia.render('admin/genre/index')
+    return inertia.render('admin/Genres/index', { genre})
   }
 
   async create({ inertia, response }: HttpContext) {
     if (app.inTest) return response.ok({ message: 'Page Loaded' })
-    return inertia.render('admin/genre/create')
+    return inertia.render('admin/Genres/create')
   }
 
   async store({ request, response }: HttpContext) {
@@ -36,7 +29,7 @@ export default class GenresController {
       })
     }
 
-    return response.redirect().toRoute('/admin/genre/index')
+    return response.redirect().back()
   }
 
   async destroy({ params, request, response }: HttpContext) {
@@ -48,7 +41,7 @@ export default class GenresController {
       return response.ok({ message: 'Genre has been deleted' })
     }
 
-    return response.redirect().toRoute('/admin/genre/index')
+    return response.redirect().toRoute('/admin/genres/index')
   }
 }
 

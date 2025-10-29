@@ -1,39 +1,94 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import Purchase from '#models/purchase'
+import Episode from '#models/episode'
+import Creator from '#models/creator'
 
-//isinya pembelian antara coin virtual dengan episode
 export default class PurchasesController {
   /**
-   * Display a list of resource
+   * User membeli episode menggunakan coin
    */
-  async index({}: HttpContext) {}
+  async buyEpisode({ params, auth, response }: HttpContext) {
+    const user = auth.user!
+    const episode = await Episode.query()
+      .where('id', params.id)
+      .preload('comics', (comicQuery) => comicQuery.preload('creators'))
+      .firstOrFail()
+
+    const wallet = await UserWallet.query()
+      .where('user_id', user.id)
+      .firstOrFail()
+
+    // misalnya harga episode kamu punya kolom "price" di tabel episode
+    const price = episode.coinPrice ?? 10 // default harga 10 coin
+
+    // cek sudah pernah beli
+    const existingPurchase = await Purchase.query()
+      .where('user_id', user.id)
+      .where('episode_id', episode.id)
+      .first()
+
+    if (existingPurchase) {
+      return response.badRequest({ message: 'Episode ini sudah kamu beli.' })
+    }
+
+    // cek saldo cukup
+    if (wallet.coin_balance < price) {
+      return response.badRequest({ message: 'Saldo kamu tidak cukup untuk membeli episode ini.' })
+    }
+
+    // pembagian hasil (misalnya: 70% ke creator, 30% ke platform)
+    const creatorShare = Math.floor(price * 0.7)
+    const platformShare = price - creatorShare
+
+    try {
+      // kurangi saldo user
+      wallet.coin_balance -= price
+      wallet.totalSpent += price
+      await wallet.save()
+
+      // catat purchase
+      const purchase = await Purchase.create({
+        userId: user.id,
+        episodeId: episode.id,
+        creatorId: episode.comics.creatorId,
+        coinSpent: price,
+        platformShare,
+        creatorShare,
+      })
+
+      // (Opsional) tambahkan coin ke wallet creator
+      const creator = await Creator.query()
+        .where('id', episode.comics.creatorId)
+        .preload('users', (userQuery) => userQuery.preload('userWallet'))
+        .first()
+
+      if (creator?.users.userWallet) {
+        creator.users.userWallet.coin_balance += creatorShare
+        creator.users.userWallet.totalPurchased += creatorShare
+        await creator.users.userWallet.save()
+      }
+
+      return response.ok({
+        message: 'Episode berhasil dibeli!',
+        new_balance: wallet.coin_balance,
+        purchase,
+      })
+    } catch (error) {
+      console.error(error)
+      return response.internalServerError({ message: 'Terjadi kesalahan saat membeli episode.' })
+    }
+  }
 
   /**
-   * Display form to create a new record
+   * Daftar episode yang pernah dibeli user
    */
-  async create({}: HttpContext) {}
+  async index({ auth, inertia }: HttpContext) {
+    const user = auth.user!
 
-  /**
-   * Handle form submission for the create action
-   */
-  async store({ request }: HttpContext) {}
+    const purchases = await Purchase.query()
+      .where('user_id', user.id)
+      .preload('episodes', (episodeQuery) => episodeQuery.preload('comics'))
 
-  /**
-   * Show individual record
-   */
-  async show({ params }: HttpContext) {}
-
-  /**
-   * Edit individual record
-   */
-  async edit({ params }: HttpContext) {}
-
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ params, request }: HttpContext) {}
-
-  /**
-   * Delete record
-   */
-  async destroy({ params }: HttpContext) {}
+    return inertia.render('user/purchases/index', { purchases })
+  }
 }

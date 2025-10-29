@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import User from './user.js'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Episode from './episode.js'
 import CommentReport from './comment_report.js'
 
@@ -30,11 +30,6 @@ export default class Comment extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => User, {
-    foreignKey: 'userId',
-  })
-  declare users: BelongsTo<typeof User>
-
   @belongsTo(() => Episode, {
     foreignKey: 'episodeId',
   })
@@ -43,5 +38,16 @@ export default class Comment extends BaseModel {
   @hasMany(() => CommentReport, {
     foreignKey: 'commentId',
   })
-  declare comment_reports: HasMany<typeof CommentReport>
+  declare commentReports: HasMany<typeof CommentReport>
+
+  @manyToMany(() => User, {
+    pivotTable: 'comment_likes'
+  })
+  declare commentLike: ManyToMany<typeof User>
+
+  @belongsTo(() => User, {
+  foreignKey: 'userId',
+  })
+  declare user: BelongsTo<typeof User>
+
 }

@@ -1,7 +1,7 @@
 import { test } from '@japa/runner'
 import db from '@adonisjs/lucid/services/db'
 
-test.group('Comic', (group) => {
+test.group('Model comic CRUD', (group) => {
   group.each.setup(async () => {
     await db.beginGlobalTransaction()
   })
