@@ -1,19 +1,140 @@
 <script setup lang="ts">
-  interface Comic {
-  id: number,
-  title: string,
-  description?: string,
-  coverUrl?:string,
-  status: string,
-  genre: string,
-  episodes: [],
-  }
+import { ref } from 'vue'
+import { router } from '@inertiajs/vue3'
 
-const props = defineProps<{
-  comic: Comic
-}>()
+interface Genre {
+  id: number
+  name: string
+}
+
+interface Episode {
+  id: number
+  title: string
+  episodeNumber: number
+  publishedAt: string
+  thumbnailUrl: string
+  coinPrice: number
+}
+
+interface Comic {
+  id: number
+  slug: string
+  title: string
+  description?: string
+  coverUrl?: string
+  status: string
+  comicGenres: Genre[]
+  episodes: Episode[]
+  isFavorited?: boolean
+  userRating?: number
+}
+
+const props = defineProps<{ comic: Comic }>()
+
+const isFavorited = ref(!!props.comic.isFavorited)
+const userRating = ref(props.comic.userRating || 0)
+
+const toggleFavorite = async () => {
+  try {
+    await router.post(`/comic/favorite/${props.comic.slug}`, {}, { preserveScroll: true })
+    isFavorited.value = !isFavorited.value
+  } catch (error) {
+    console.error('Gagal ubah favorite:', error)
+  }
+}
+
+// rate comic
+const rateComic = async (value: number) => {
+  userRating.value = value
+  try {
+    await router.post(`/comic/rating/${props.comic.slug}`, { rating_value: value }, { preserveScroll: true })
+  } catch (error) {
+    console.error('Gagal simpan rating:', error)
+  }
+}
 </script>
 
 <template>
-  <p class="text-3xl font-bold">{{ comic.title }}</p>
+  <div class="flex flex-col min-h-screen justify-center items-center py-8 px-4">
+    <!-- Cover -->
+    <img
+      :src="comic.coverUrl || '/placeholder.png'"
+      alt="Cover"
+      class="w-72 sm:w-80 aspect-[3/4] object-cover rounded-xl shadow-md border mb-5"
+    />
+
+    <!-- Judul -->
+    <h1 class="text-black dark:text-white text-3xl font-bold text-center mb-3">
+      {{ comic.title }}
+    </h1>
+
+    <!-- Deskripsi -->
+    <p class="max-w-xl text-center text-gray-700 dark:text-gray-300 mb-4">
+      {{ comic.description }}
+    </p>
+
+    <!-- Status -->
+    <div class="text-purple-500 font-semibold mb-4 capitalize">
+      {{ comic.status }}
+    </div>
+
+    <!-- Genre -->
+    <div class="flex flex-wrap justify-center gap-2 mb-6">
+      <span
+        v-for="genre in comic.comicGenres"
+        :key="genre.id"
+        class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-full text-sm"
+      >
+        {{ genre.name }}
+      </span>
+    </div>
+
+    <!-- Favorite dan Rating -->
+    <div class="flex flex-col sm:flex-row items-center gap-4 mb-8">
+      <!-- Favorite -->
+      <button
+        @click="toggleFavorite"
+        class="flex items-center gap-1 text-lg font-medium transition hover:scale-105"
+      >
+        <span :class="isFavorited ? 'text-red-500' : 'text-gray-400'">❤️</span>
+        <span class="text-gray-700 dark:text-gray-300">
+          {{ isFavorited ? 'Add to Favorite' : 'Favorited' }}
+        </span>
+      </button>
+
+      <!-- Rating -->
+      <div class="flex items-center">
+        <button
+          v-for="star in 5"
+          :key="star"
+          @click="rateComic(star)"
+          class="text-2xl focus:outline-none transition-transform hover:scale-110"
+        >
+          <span :class="star <= userRating ? 'text-yellow-400' : 'text-gray-400'">★</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Episode List -->
+    <div class="w-full max-w-2xl border-t border-gray-300 dark:border-gray-600 pt-4">
+      <h3 class="text-lg font-semibold mb-3 text-black dark:text-white">
+        Episode List
+      </h3>
+      <div
+        v-for="episode in comic.episodes"
+        :key="episode.id"
+        class="border-b border-gray-200 dark:border-gray-700 py-3 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 px-3 rounded transition"
+      >
+        <div>
+          <div class="font-medium text-black dark:text-white">{{ episode.title }}</div>
+          <div class="text-sm text-gray-500">
+            {{ new Date(episode.publishedAt).toLocaleDateString() }}
+          </div>
+        </div>
+        <div class="text-gray-700 dark:text-gray-300 text-sm">
+          {{ episode.coinPrice }} 💰
+        </div>
+      </div>
+    </div>
+  </div>
 </template>

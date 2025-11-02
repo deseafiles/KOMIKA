@@ -52,7 +52,7 @@ const props = defineProps<{
           class="bg-white dark:bg-zinc-800 rounded-xl shadow p-4 hover:shadow-lg transition"
         >
           <Link
-            :href="`/comic/${comic.id}`"
+            :href="`/comic/show/${comic.slug}`"
             class="block overflow-hidden rounded-lg"
           >
             <img

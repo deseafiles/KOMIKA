@@ -5,9 +5,14 @@ import app from '@adonisjs/core/services/app'
 
 export default class GenresController {
   async index({ inertia }: HttpContext) {
-    const genre = await Genre.query().select(['name'])
+    const genres = await Genre.query().select(['name'])
 
-    return inertia.render('admin/Genres/index', { genre})
+    return inertia.render('admin/Genres/index', { genres})
+  }
+
+  async list({ inertia }: HttpContext) {
+    const genres = await Genre.query().select(['id', 'name'])
+    return inertia.render('comic/create', { genres })
   }
 
   async create({ inertia, response }: HttpContext) {

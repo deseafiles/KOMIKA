@@ -15,26 +15,28 @@ export default class EpisodesController {
 
   /**
    * Display all episodes belonging to creator
-   */
+   * @creator
+  */
   async index({ inertia, auth }: HttpContext) {
     const creator = await Creator
       .query()
       .where('user_id', auth.user!.id)
       .firstOrFail()
 
-    // Ambil semua comic milik creator
-    const comics = await Comic
+    // Ambil semua episode di komik milik creator
+    const episodes = await Comic
       .query()
       .where('creator_id', creator.id)
       .preload('episodes', (episodesQuery) => {
         episodesQuery.orderBy('episode_number', 'asc')
       })
 
-    return inertia.render('episode/index', { comics })
+    return inertia.render('episode/index', { episodes })
   }
 
   /**
    * Show form to create new episode
+   * @creator
    */
   async create({ inertia }: HttpContext) {
     return inertia.render('episode/create')
@@ -42,6 +44,7 @@ export default class EpisodesController {
 
   /**
    * Store new episode
+   * @creator
    */
   async store({ request, response }: HttpContext) {
     const {
@@ -159,7 +162,7 @@ export default class EpisodesController {
   /**
    * List all published episodes for a specific comic
    * (used in public reader view)
-   */
+
   async listByComic({ params, inertia }: HttpContext) {
     const comic = await Comic
       .query()

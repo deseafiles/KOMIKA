@@ -24,7 +24,6 @@ export default class DashboardAdminsController {
       .sum('platformShare', 'total')
       .first()
 
-    // Pastikan semua nilai dikonversi jadi number
     const comicCount = Number(comicCountRow?.$extras?.count || 0)
     const userCount = Number(userCountRow?.$extras?.count || 0)
     const totalRevenue = Number(totalRevenueRow?.$extras?.total || 0)

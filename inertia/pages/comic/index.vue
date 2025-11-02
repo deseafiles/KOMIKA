@@ -1,72 +1,68 @@
 <script setup lang="ts">
-import ComicCard from '~/components/comic/comicCard.vue'
-import { Head, Link } from '@inertiajs/vue3'
-
 interface Comic {
-  userId: number,
   id: number
   title: string
-  description?: string
-  coverUrl?: string
-  status: string
+  slug: string
+  description: string
+  coverUrl: string
 }
 
 const props = defineProps<{
   listComicByCreator: Comic[]
 }>()
-
-function handleEdit(id: number) {
-  console.log('Edit comic', id)
-  // nanti bisa diarahkan ke router.visit(`/comic/${id}/edit`)
-}
-
-function handleDelete(id: number) {
-  console.log('Delete comic', id)
-  // nanti bisa tambahkan konfirmasi + delete request ke backend
-}
 </script>
 
 <template>
-  <Head title="My Comics" />
+  <div class="flex flex-col min-h-screen justify-start items-center pt-24 bg-purple-50 dark:bg-neutral-900">
+    <h1 class="border-y-2 text-2xl font-bold text-black dark:text-white py-2">
+      Daftar Komik Kamu
+    </h1>
 
-  <section class="max-w-7xl mx-auto px-6 py-10">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-      <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">My Comics</h1>
-      <Link
-        href="/comic/create"
-        class="inline-block bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition-all duration-200"
-      >
-        + Add Comic
-      </Link>
+    <!-- Jika belum ada komik -->
+    <div v-if="!props.listComicByCreator.length" class="py-10 text-gray-600 dark:text-gray-300">
+      Belum ada komik yang kamu buat.
     </div>
 
-    <!-- Daftar Komik -->
-    <div
-      v-if="props.listComicByCreator && props.listComicByCreator.length"
-      class="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-    >
-      <ComicCard
-        v-for="comic in props.listComicByCreator"
-        :key="comic.id"
-        :comic="comic"
-        @edit="handleEdit"
-        @delete="handleDelete"
-      />
-    </div>
-
-    <!-- State Kosong -->
+    <!-- Jika ada komik -->
     <div
       v-else
-      class="flex flex-col items-center justify-center py-16 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-10 w-11/12 max-w-6xl"
     >
-      <p class="text-lg text-gray-600 mb-3">Belum ada komik yang kamu buat.</p>
-      <Link
-        href="/comic/create"
-        class="text-violet-600 font-semibold hover:underline"
+      <div
+        v-for="comic in props.listComicByCreator"
+        :key="comic.id"
+        class="bg-white dark:bg-neutral-800 border-2 border-black dark:border-neutral-700 rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden"
       >
-        Tambah sekarang
-      </Link>
+        <!-- Gambar cover -->
+        <img
+          v-if="comic.coverUrl"
+          :src="comic.coverUrl"
+          alt="Cover Komik"
+          class="w-full h-56 object-cover"
+        />
+        <div
+          v-else
+          class="w-full h-56 bg-gray-200 dark:bg-neutral-700 flex items-center justify-center text-gray-500"
+        >
+          Tidak ada cover
+        </div>
+
+        <!-- Info komik -->
+        <div class="p-4">
+          <h2 class="text-xl font-semibold text-purple-700 dark:text-purple-300">
+            {{ comic.title }}
+          </h2>
+          <p class="text-gray-700 dark:text-gray-300 text-sm mt-2 line-clamp-3">
+            {{ comic.description }}
+          </p>
+          <a
+            :href="`/comic/show/${comic.slug}`"
+            class="inline-block mt-4 px-4 py-1.5 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition"
+          >
+            Lihat Detail
+          </a>
+        </div>
+      </div>
     </div>
-  </section>
+  </div>
 </template>

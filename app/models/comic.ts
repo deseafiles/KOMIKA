@@ -19,7 +19,7 @@ export default class Comic extends BaseModel {
   declare id: number
 
   @column()
-  declare creatorId: number
+  declare creatorId: number | null
 
   @column()
   declare title: string

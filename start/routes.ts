@@ -24,6 +24,7 @@ router.get('/', [HomeController, 'index']).as('home')
 router.get('/admin/index', [DashboardAdminsController, 'index'])
 
 router.group(() => {
+  router.get('/register', [RegisterController, 'index']).as('register.index')
   router.post('/register', [RegisterController, 'store']).as('register.store')
   router.get('/login', [LoginController, 'index'])
   router.post('/login', [LoginController, 'store'])
@@ -33,13 +34,15 @@ router.group(() => {
 //done, harusnya
 router
   .group(() => {
-    router.get('/index', [ComicsController, 'index']).use(middleware.guest())
+    router.get('/index', [ComicsController, 'index']).use(middleware.auth())
     router.get('/create', [ComicsController, 'create']).use(middleware.auth())
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
     router.get('/show/:slug', [ComicsController, 'show']).use(middleware.auth())
     router.put('/update/:slug', [ComicsController, 'update']).use(middleware.auth())
     router.get('/edit', [ComicsController, 'edit']).use(middleware.auth())
     router.delete('/destroy/:slug', [ComicsController, 'destroy']).use(middleware.auth())
+    router.post('/favorite/:slug', [ComicsController, 'favorite']).use(middleware.auth())
+    router.post('/rating/:slug', [ComicsController, 'rate']).use(middleware.auth())
   })
   .prefix('/comic')
 
@@ -56,7 +59,7 @@ router.group(() => {
   .use(middleware.auth())
 
 router.group(() => {
-  router.get('/comics/episode/:id', [EpisodesController, 'listByComic'])
+  //router.get('/comics/episode/:id', [EpisodesController, 'listByComic'])
   router.post('/episode/like/:id', [EpisodesController, 'likeEpisode']).use(middleware.auth())
 })
 // 🌍 Public reader routes

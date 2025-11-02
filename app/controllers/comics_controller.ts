@@ -1,5 +1,6 @@
 import Comic from '#models/comic'
 import Creator from '#models/creator'
+import Genre from '#models/genre'
 import { CreatorService } from '#services/creator_service'
 import { createComicValidator } from '#validators/comic'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -8,6 +9,7 @@ import app from '@adonisjs/core/services/app'
 export default class ComicsController {
   /**
    * Display a list of resource
+   * @creator
    */
 async index({ inertia, auth }: HttpContext) {
   const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
@@ -18,14 +20,16 @@ async index({ inertia, auth }: HttpContext) {
 
   /**
    * Display form to create a new record
+   * @creator
    */
-  async create({ response, inertia }: HttpContext) {
-    if (app.inTest) return response.ok({ message: 'Page Loaded' })
-    return inertia.render('comic/create')
-  }
+async create({ inertia }: HttpContext) {
+  const genres = await Genre.query().select(['id', 'name'])
+  return inertia.render('comic/create', { genres })
+}
 
   /**
    * Handle form submission for the create action
+   * @creator
    */
   async store({ request, response, auth }: HttpContext) {
     const { title, description, genreIds } = await request.validateUsing(createComicValidator)
@@ -75,13 +79,16 @@ async index({ inertia, auth }: HttpContext) {
    * Show individual record
    * ini yang pas kita pencet 1 comic bakal nampilin detail comicnya
    * return detail comic, jumlah like, jumlah pembaca, episode
+   * @all Users
    */
   async show({ params, inertia  }: HttpContext) {
     const comic = await Comic
                        .query()
                        .where('slug', params.slug)
                        .preload('episodes', episodeQuery => {
-                         episodeQuery.orderBy('episodeNumber', 'asc')
+                         episodeQuery.where('isPublished', true)
+                        .orderBy('episodeNumber', 'asc')
+
                        })
                        .preload('creators')
                        .preload('comicGenres')
@@ -93,6 +100,7 @@ async index({ inertia, auth }: HttpContext) {
   }
   /**
    * Edit individual record
+   * @creator
    */
 
 async edit({ params, inertia, auth }: HttpContext) {
@@ -107,6 +115,7 @@ async edit({ params, inertia, auth }: HttpContext) {
 }
   /**
    * Handle form submission for the edit action
+   * @creator
   */
 
   async update({ params, response, request, auth }: HttpContext) {
@@ -123,6 +132,7 @@ async edit({ params, inertia, auth }: HttpContext) {
 
   /**
    * Delete record
+   * @creator
    */
   async destroy({ params, response, auth }: HttpContext) {
     const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
@@ -136,6 +146,8 @@ async edit({ params, inertia, auth }: HttpContext) {
 
 async rate({ params, auth, request, response }: HttpContext) {
   const user = auth.user!
+  const comic = await Comic.query().where('slug', params.slug).firstOrFail()
+
   const ratingValue = Number(request.input('rating_value'))
 
   if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5) {
@@ -146,33 +158,44 @@ async rate({ params, auth, request, response }: HttpContext) {
   const existing = await user
     .related('userRating')
     .query()
-    .where('comic_id', params.id)
+    .where('comic_id', comic.id)
     .first()
 
   if (existing) {
     // update rating di pivot
-    await user.related('userRating').sync({
-      [params.id]: { rating_value: ratingValue },
-    }, false) // false artinya jangan detach data lain
+    await user.related('userRating').sync(
+      { [comic.id]: { rating_value: ratingValue } },
+      false // false artinya jangan detach data lain
+    )
   } else {
     // buat rating baru
     await user.related('userRating').attach({
-      [params.id]: { rating_value: ratingValue },
+      [comic.id]: { rating_value: ratingValue },
     })
   }
 
-  return response.ok({ message: 'Rating saved successfully' })
+  return response.redirect().back()
 }
 
-  async favorite({ params, response, auth}: HttpContext){
-    const user = auth.user!
-    const favorite = await user.related('userFavorites').query().where('comic_id', params.id).first()
+async favorite({ params, auth, response }: HttpContext) {
+  const user = auth.user!
 
-    if(favorite) {
-      await user.related('userFavorites').detach([params.id])
-    } else{
-      await user.related('userFavorites').attach([params.id])
-    }
+  // cari komik berdasarkan slug
+  const comic = await Comic.query().where('slug', params.slug).firstOrFail()
+
+  // cek apakah user sudah favorite
+  const favorite = await user
+    .related('userFavorites')
+    .query()
+    .where('comic_id', comic.id)
+    .first()
+
+  if (favorite) {
+    await user.related('userFavorites').detach([comic.id])
+  } else {
+    await user.related('userFavorites').attach([comic.id])
   }
 
+  return response.redirect().back()
+}
 }
