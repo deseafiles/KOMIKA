@@ -8,7 +8,7 @@ export default class extends BaseSchema {
       table.increments('id')
       table.integer('user_id').unsigned().references('users.id').onDelete('CASCADE').notNullable()
       table.decimal('total_earning', 12).unsigned().defaultTo(0)
-      table.decimal('witdrawn_balance', 12).unsigned().defaultTo(0)
+      table.decimal('withdrawn_balance', 12).unsigned().defaultTo(0)
       table.string('bank_name')
       table.string('bank_account_name')
       table.string('bank_account_number')
@@ -21,4 +21,3 @@ export default class extends BaseSchema {
     this.schema.dropTable(this.tableName)
   }
 }
-

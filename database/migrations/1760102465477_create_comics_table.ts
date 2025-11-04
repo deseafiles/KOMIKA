@@ -16,6 +16,7 @@ export default class extends BaseSchema {
       table.string('slug').unique()
       table.string('description').nullable()
       table.string('cover_url').nullable()
+      table.enum('status', ['Ongoing', 'Hiatus', 'Completed']).defaultTo('Ongoing')
       table
         .enum('update_day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'])
         .nullable()
@@ -29,4 +30,3 @@ export default class extends BaseSchema {
     this.schema.dropTable(this.tableName)
   }
 }
-

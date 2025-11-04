@@ -6,12 +6,15 @@ import {
   column,
   beforeCreate,
   beforeUpdate,
+  beforeSave,
+  manyToMany,
 } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Comic from './comic.js'
 import Page from './page.js'
 import Purchase from './purchase.js'
 import string from '@adonisjs/core/helpers/string'
+import User from './user.js'
 
 export default class Episode extends BaseModel {
   @column({ isPrimary: true })
@@ -21,7 +24,7 @@ export default class Episode extends BaseModel {
   declare comicId: number
 
   @column()
-  declare title: string
+  declare title: string | null
 
   @column()
   declare slug: string
@@ -65,6 +68,15 @@ export default class Episode extends BaseModel {
   })
   declare pages: HasMany<typeof Page>
 
+  @manyToMany(() => User, {
+    pivotTable: 'episode_likes'
+  })
+  declare episodeLikes: ManyToMany<typeof User>
+
+  @manyToMany(() => User, {
+    pivotTable: 'episode_reads'
+  })
+  declare episodeReads: ManyToMany<typeof User>
   /*many to many
    * purchase, comment,
    */
@@ -105,5 +117,21 @@ export default class Episode extends BaseModel {
     }, [])
     const increment = incrementors.length ? Math.max(...incrementors) + 1 : 1
     episode.slug = `${slug}-${increment}`
+  }
+
+  @beforeSave()
+  static async changePremiumEpisode(episode: Episode) {
+    episode.isPremium = episode.coinPrice > 0
+  }
+
+  @beforeSave()
+  static async changeIsPublish(episode: Episode) {
+    if (!episode.publishedAt) {
+      episode.isPublished = false
+      return
+    }
+
+    const now = DateTime.now()
+    episode.isPublished = episode.publishedAt <= now
   }
 }

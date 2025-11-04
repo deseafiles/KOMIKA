@@ -7,7 +7,6 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.string('name').notNullable()
-      table.boolean('is_deleted').defaultTo(false)
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })
@@ -17,4 +16,3 @@ export default class extends BaseSchema {
     this.schema.dropTable(this.tableName)
   }
 }
-

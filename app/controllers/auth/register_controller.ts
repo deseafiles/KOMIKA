@@ -1,6 +1,8 @@
+import VerifyEmailNotification from '#mails/verify_email_notification'
 import User from '#models/user'
 import { registerValidator } from '#validators/auth'
 import type { HttpContext } from '@adonisjs/core/http'
+import mail from '@adonisjs/mail/services/main'
 
 export default class RegisterController {
   async index({ inertia }: HttpContext) {
@@ -12,7 +14,10 @@ export default class RegisterController {
     try {
       const user = await User.create({ email, username, password })
 
+      const verifyUrl = `http://localhost:3333/verify/${user.id}`
       //return response.ok({ message: 'User berhasil dibuat', data: user })
+      await mail.send(new VerifyEmailNotification(user, verifyUrl))
+
       await auth.use('web').login(user)
       return response.redirect().toRoute('home')
     } catch (error) {

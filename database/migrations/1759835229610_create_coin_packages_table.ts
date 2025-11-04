@@ -9,7 +9,7 @@ export default class extends BaseSchema {
       table.string('name').notNullable().unique()
       table.integer('coin_amount').notNullable().unsigned()
       table.integer('price').unsigned().notNullable()
-      table.integer('bonus_coin').unsigned().notNullable()
+      table.integer('bonus_coin').unsigned().nullable().defaultTo(0)
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

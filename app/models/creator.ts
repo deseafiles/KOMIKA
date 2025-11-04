@@ -8,8 +8,8 @@ export default class Creator extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
-  declare userId: number
+  @column({ columnName: 'user_id'})
+  declare userId: number | null
 
   @column()
   declare totalEarning: number

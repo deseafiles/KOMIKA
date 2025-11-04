@@ -1,3 +1,4 @@
+import Creator from '#models/creator'
 import User from '#models/user'
 
 export class CreatorService {
@@ -12,6 +13,14 @@ export class CreatorService {
       return creator
     }
     return existCreator
+  }
+
+  static async getCreator(user: User) {
+    const creator = await Creator.query()
+      .where('user_id', user.id)
+      .first()
+
+    return creator
   }
 }
 

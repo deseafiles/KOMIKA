@@ -1,26 +1,21 @@
 import Comic from '#models/comic'
-import app from '@adonisjs/core/services/app'
 import type { HttpContext } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
 
 export default class HomeController {
-  async index({ response, inertia, request }: HttpContext) {
-    const allComic = await Comic.all()
+  async index({ inertia, response }: HttpContext) {
+    if (app.inTest) return response.ok({ message: 'Page Loaded' })
 
-    // Kalau testing (misal pakai Japa)
-    if (app.inTest) {
-      return response.ok({ message: allComic })
-    }
-
-    // Kalau request dari Postman / API
-    if (request.accepts(['json'])) {
-      return response.ok({
-        message: 'All comics retrieved successfully',
-        data: allComic,
+    const allComic = await Comic
+      .query()
+      .preload('comicGenres', (genreQuery) => {
+        genreQuery.select(['id', 'name'])
       })
-    }
+      .preload('creators', (creatorQuery) => {
+        creatorQuery.preload('users')
+      })
+      .orderBy('created_at', 'desc')
 
-    // Kalau request dari browser pakai Inertia
-    return inertia.render('home', { comics: allComic })
+    return inertia.render('home', { allComic })
   }
 }
-
