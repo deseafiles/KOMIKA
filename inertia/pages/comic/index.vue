@@ -56,7 +56,7 @@ const props = defineProps<{
             {{ comic.description }}
           </p>
           <a
-            :href="`/comic/show/${comic.slug}`"
+            :href="`/episode/index`"
             class="inline-block mt-4 px-4 py-1.5 text-sm bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition"
           >
             Lihat Detail

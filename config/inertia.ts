@@ -11,9 +11,9 @@ const inertiaConfig = defineConfig({
    * Data that should be shared with all rendered pages
    */
   sharedData: {
-    // user: (ctx) => ctx.inertia.always(() => ctx.auth.user),
+    appName: 'Komika', // 👈 This will be available in all views
+    user: (ctx) => ctx.auth?.user// 👈 Scoped to the current request
   },
-
   /**
    * Options for the server-side rendering
    */

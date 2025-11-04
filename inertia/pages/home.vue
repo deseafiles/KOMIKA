@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import Navbar from '~/components/ui/navbar.vue'
 import Footer from '~/components/ui/footer.vue'
+import type { SharedData, SharedProps } from '@adonisjs/inertia/types'
 
 interface Genre {
   id: number
@@ -21,6 +22,7 @@ interface Creator {
 interface Comic {
   id: number
   title: string
+  slug: string
   description: string
   coverUrl: string | null
   status: string
@@ -29,9 +31,14 @@ interface Comic {
   creators: Creator
 }
 
+
 const props = defineProps<{
-  allComic: Comic[]
+ allComic: Comic[]
 }>()
+
+const page = usePage<SharedProps>()
+const user =page.props.user
+console.log(user)
 </script>
 
 <template>

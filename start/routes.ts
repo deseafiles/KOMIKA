@@ -19,16 +19,16 @@ import CoinPackagesController from '#controllers/admin/coin_packages_controller'
 import EpisodesController from '#controllers/episodes_controller'
 import DashboardAdminsController from '#controllers/admin/dashboard_admins_controller'
 
-router.get('/', [HomeController, 'index']).as('home')
+router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
 
 router.get('/admin/index', [DashboardAdminsController, 'index'])
 
 router.group(() => {
-  router.get('/register', [RegisterController, 'index']).as('register.index')
-  router.post('/register', [RegisterController, 'store']).as('register.store')
-  router.get('/login', [LoginController, 'index'])
-  router.post('/login', [LoginController, 'store'])
-  router.post('/logout', [LogoutController, 'handle']).use(middleware.auth())
+  router.get('/register', [RegisterController, 'index']).as('register.index').use(middleware.guest())
+  router.post('/register', [RegisterController, 'store']).as('register.store').use(middleware.guest())
+  router.get('/login', [LoginController, 'index']).use(middleware.guest())
+  router.post('/login', [LoginController, 'store']).use(middleware.guest())
+  router.post('/logout', [LogoutController, 'handle'])
 })
 
 //done, harusnya
@@ -37,7 +37,7 @@ router
     router.get('/index', [ComicsController, 'index']).use(middleware.auth())
     router.get('/create', [ComicsController, 'create']).use(middleware.auth())
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
-    router.get('/show/:slug', [ComicsController, 'show']).use(middleware.auth())
+    router.get('/show/:slug', [ComicsController, 'show'])
     router.put('/update/:slug', [ComicsController, 'update']).use(middleware.auth())
     router.get('/edit', [ComicsController, 'edit']).use(middleware.auth())
     router.delete('/destroy/:slug', [ComicsController, 'destroy']).use(middleware.auth())
