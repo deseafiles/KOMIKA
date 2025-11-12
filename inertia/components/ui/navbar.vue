@@ -7,6 +7,7 @@ import { ref } from 'vue'
 const page = usePage<SharedProps>()
 const user = page.props.user
 
+const creator = usePage<{ creator: Creator}>()
 const isOpen = ref(false)
 
 const toggleDropdown = () => {
@@ -25,6 +26,9 @@ const logout = () => {
     },
   })
 }
+
+console.log(creator)
+
 </script>
 
 <template>
@@ -79,6 +83,14 @@ const logout = () => {
                 class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700"
               >
                 Lihat Profil
+              </Link>
+
+              <Link
+                v-if="creator"
+                href="/comic/index"
+                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700"
+              >
+                Komik Saya
               </Link>
 
               <button

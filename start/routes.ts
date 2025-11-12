@@ -63,7 +63,6 @@ router.group(() => {
   router.delete('/delete/:id', [EpisodesController, 'destroy'])
 })
   .prefix('/episode')
-  .use(middleware.auth())
 
   router.group(() => {
     router.post('/store/:id', [PagesController, 'store']).use(middleware.auth())

@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Purchase from '#models/purchase'
 import Episode from '#models/episode'
 import Creator from '#models/creator'
+import UserWalet from '#models/user_walet'
 
 export default class PurchasesController {
   /**
@@ -14,7 +15,7 @@ export default class PurchasesController {
       .preload('comics', (comicQuery) => comicQuery.preload('creators'))
       .firstOrFail()
 
-    const wallet = await UserWallet.query()
+    const wallet = await UserWalet.query()
       .where('user_id', user.id)
       .firstOrFail()
 
@@ -32,7 +33,7 @@ export default class PurchasesController {
     }
 
     // cek saldo cukup
-    if (wallet.coin_balance < price) {
+    if (wallet.coinBalance < price) {
       return response.badRequest({ message: 'Saldo kamu tidak cukup untuk membeli episode ini.' })
     }
 
@@ -42,7 +43,7 @@ export default class PurchasesController {
 
     try {
       // kurangi saldo user
-      wallet.coin_balance -= price
+      wallet.coinBalance -= price
       wallet.totalSpent += price
       await wallet.save()
 
