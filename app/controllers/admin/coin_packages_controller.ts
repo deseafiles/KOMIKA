@@ -43,12 +43,11 @@ export default class CoinPackagesController {
       })
     }
 
-    return response.redirect().toRoute('admin/CoinPackages/index')
+    return response.redirect().toRoute('/admin/coin/index')
   }
 
   /**
    * Show individual record
-   */
   async show({ params, inertia }: HttpContext) {
     const coin = await CoinPackage
                       .query()
@@ -57,6 +56,7 @@ export default class CoinPackagesController {
 
     return inertia.render('admin/CoinPackages/show', { coin })
   }
+   */
 
   /**
    * Edit individual record
@@ -79,7 +79,7 @@ export default class CoinPackagesController {
     const payload = request.only(['name', 'coinAmount', 'price', 'bonusCoin'])
 
     await coin.merge(payload).save()
-    return response.redirect().back()
+    return response.redirect().toRoute('/admin/coin/index')
   }
 
   /**

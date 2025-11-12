@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column, hasMany, hasOne, manyToMany } from '@adonisjs/lucid/orm'
+import { afterCreate, BaseModel, column, hasMany, hasOne, manyToMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import type { HasMany, HasOne, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Comment from './comment.js'
@@ -102,4 +102,14 @@ export default class User extends compose(BaseModel, AuthFinder) {
     pivotTable: 'comment_likes'
   })
   declare userCommentLike: ManyToMany<typeof Comment>
+
+  @afterCreate()
+  static async createUserWallet(user: User) {
+    await UserWalet.create({
+      userId: user.id,
+      coinBalance: 0,
+      totalSpent: 0,
+      totalPurchased: 0,
+    })
+  }
 }

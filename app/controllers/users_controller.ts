@@ -7,13 +7,13 @@ export default class UsersController {
    * @admin
    */
   async index({ inertia, auth }: HttpContext) {
-    const admin = auth.user!
+    //const admin = auth.user!
 
     const user = await User.query()
-                           .where('user_id', admin.id)
                            .where('isAdmin', false)
                            .where('is_banned', false)
                            .where('is_deleted', false)
+                           .where('is_verified', false)
 
     return inertia.render('admin/users/index', { user })
   }
@@ -25,12 +25,14 @@ export default class UsersController {
   async show({ inertia, auth }: HttpContext) {
     const user = auth.user!
 
-    const userData = await User.query()
+    const userData = await User
+      .query()
       .where('id', user.id)
       .preload('userWallet')
+      .preload('creator')
       .firstOrFail()
 
-    return inertia.render('user/profile', { userData })
+    return inertia.render('profile/show', { userData })
   }
 
   /**

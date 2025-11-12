@@ -18,18 +18,25 @@ import GenresController from '#controllers/admin/genres_controller'
 import CoinPackagesController from '#controllers/admin/coin_packages_controller'
 import EpisodesController from '#controllers/episodes_controller'
 import DashboardAdminsController from '#controllers/admin/dashboard_admins_controller'
+import UsersController from '#controllers/users_controller'
+import PagesController from '#controllers/pages_controller'
 
 router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
 
-router.get('/admin/index', [DashboardAdminsController, 'index'])
+router.get('/admin', [DashboardAdminsController, 'index'])
 
 router.group(() => {
-  router.get('/register', [RegisterController, 'index']).as('register.index').use(middleware.guest())
-  router.post('/register', [RegisterController, 'store']).as('register.store').use(middleware.guest())
+  router.get('/register', [RegisterController, 'index']).as('register.index')
+  router.post('/register', [RegisterController, 'store']).as('register.store')
   router.get('/login', [LoginController, 'index']).use(middleware.guest())
   router.post('/login', [LoginController, 'store']).use(middleware.guest())
   router.post('/logout', [LogoutController, 'handle'])
 })
+
+router.group(() => {
+  router.get('/show', [UsersController, 'show']).use(middleware.auth())
+})
+  .prefix('/profile')
 
 //done, harusnya
 router
@@ -48,7 +55,7 @@ router
 
 //done
 router.group(() => {
-  router.get('/index', [EpisodesController, 'index'])
+  router.get('/index/:slug', [EpisodesController, 'index'])
   router.get('/create', [EpisodesController, 'create'])
   router.get('/edit/:id', [EpisodesController, 'edit'])
   router.post('/store', [EpisodesController, 'store'])
@@ -57,6 +64,11 @@ router.group(() => {
 })
   .prefix('/episode')
   .use(middleware.auth())
+
+  router.group(() => {
+    router.post('/store/:id', [PagesController, 'store']).use(middleware.auth())
+  })
+  .prefix('/pages')
 
 router.group(() => {
   //router.get('/comics/episode/:id', [EpisodesController, 'listByComic'])
@@ -69,7 +81,7 @@ router.group(() => {
 router
   .group(() => {
     router.get('/index', [GenresController, 'index'])
-    router.post('/create', [GenresController, 'create'])
+    router.get('/create', [GenresController, 'create'])
     router.post('/store', [GenresController, 'store'])
     router.delete('/destroy/:id', [GenresController, 'destroy'])
   })
@@ -79,14 +91,14 @@ router
 router
   .group(() => {
     router.get('/index', [CoinPackagesController, 'index'])
-    router.post('/create', [CoinPackagesController, 'create'])
+    router.get('/create', [CoinPackagesController, 'create'])
     router.post('/store', [CoinPackagesController, 'store'])
     router.get('/edit/:id', [CoinPackagesController, 'edit'])
     router.put('/update/:id', [CoinPackagesController, 'update'])
     router.delete('/destroy/:id', [CoinPackagesController, 'destroy'])
-    router.get('/show/:id', [CoinPackagesController, 'show'])
+    //router.get('/show/:id', [CoinPackagesController, 'show'])//hapus show coin
   })
-  .prefix('admin/coin')
+  .prefix('/admin/coin')
 
 
 router.post('/midtrans/test', async ({ response }) => {

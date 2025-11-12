@@ -10,6 +10,7 @@ interface Genre {
 interface Episode {
   id: number
   title: string
+  slug: string
   episodeNumber: number
   publishedAt: string
   thumbnailUrl: string
@@ -50,6 +51,14 @@ const rateComic = async (value: number) => {
     await router.post(`/comic/rating/${props.comic.slug}`, { rating_value: value }, { preserveScroll: true })
   } catch (error) {
     console.error('Gagal simpan rating:', error)
+  }
+}
+
+const readEpisode = async () => {
+  try {
+  router.get(`/episode/index/${props.comic.slug}`)
+  } catch (error) {
+  console.log('Gagal menampilkan episode', error)
   }
 }
 </script>
@@ -126,7 +135,7 @@ const rateComic = async (value: number) => {
         class="border-b border-gray-200 dark:border-gray-700 py-3 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 px-3 rounded transition"
       >
         <div>
-          <div class="font-medium text-black dark:text-white">{{ episode.title }}</div>
+          <div @click="readEpisode" class="font-medium text-black dark:text-white">{{ episode.title }}</div>
           <div class="text-sm text-gray-500">
             {{ new Date(episode.publishedAt).toLocaleDateString() }}
           </div>

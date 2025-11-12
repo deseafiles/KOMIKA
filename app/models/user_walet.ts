@@ -11,7 +11,7 @@ export default class UserWalet extends BaseModel {
   declare userId: number
 
   @column()
-  declare coin_balance: number
+  declare coinBalance: number
 
   @column()
   declare totalSpent: number
