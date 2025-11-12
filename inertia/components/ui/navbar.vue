@@ -65,7 +65,7 @@ const logout = () => {
               @click="toggleDropdown"
               class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs dark:bg-neutral-800 dark:border-neutral-700 dark:text-white hover:bg-gray-50 dark:hover:bg-neutral-700"
             >
-              {{ 'Profile' }}
+            {{user.username}}
             </button>
 
             <!-- Dropdown pakai v-if -->
@@ -75,7 +75,7 @@ const logout = () => {
               class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-neutral-800 dark:border-neutral-700 z-50"
             >
               <Link
-                href="/profile"
+                href="/profile/show"
                 class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700"
               >
                 Lihat Profil

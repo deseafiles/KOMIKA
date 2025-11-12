@@ -5,7 +5,7 @@ import app from '@adonisjs/core/services/app'
 
 export default class GenresController {
   async index({ inertia }: HttpContext) {
-    const genres = await Genre.query().select(['name'])
+    const genres = await Genre.all()
 
     return inertia.render('admin/Genres/index', { genres})
   }
@@ -34,7 +34,7 @@ export default class GenresController {
       })
     }
 
-    return response.redirect().back()
+    return response.redirect().toRoute('/admin/genres/index')
   }
 
   async destroy({ params, request, response }: HttpContext) {

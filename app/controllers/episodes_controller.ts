@@ -185,11 +185,11 @@ export default class EpisodesController {
   /**
    * Show single published episode to reader
    */
-async showPublic({ params, inertia, auth }: HttpContext) {
+async show({ params, inertia, auth }: HttpContext) {
   // Ambil episode yang dipublikasikan
   const episode = await Episode
     .query()
-    .where('id', params.id)
+    .where('slug', params.slug)
     .whereNotNull('published_at')
     .preload('pages', (pagesQuery) => pagesQuery.orderBy('page_number', 'asc'))
     .preload('comics', (comicQuery) => comicQuery.preload('comicGenres'))
@@ -203,7 +203,7 @@ async showPublic({ params, inertia, auth }: HttpContext) {
       await user.related('userReads').attach([params.id])
     }
   }
-
+console.log(episode.toJSON())
   return inertia.render('episode/show', { episode })
 }
 
