@@ -3,6 +3,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3'
 import Navbar from '~/components/ui/navbar.vue'
 import Footer from '~/components/ui/footer.vue'
 import type { SharedData, SharedProps } from '@adonisjs/inertia/types'
+import Pagination from '~/components/ui/Pagination.vue'
 
 interface Genre {
   id: number
@@ -104,6 +105,7 @@ console.log(user)
       </div>
     </main>
 
+    <Pagination/>
     <footer class="mt-auto w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 mx-auto">
       <Footer />
     </footer>

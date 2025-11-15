@@ -46,7 +46,7 @@ router
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
     router.get('/show/:slug', [ComicsController, 'show'])
     router.put('/update/:slug', [ComicsController, 'update']).use(middleware.auth())
-    router.get('/edit', [ComicsController, 'edit']).use(middleware.auth())
+    router.get('/edit/:slug', [ComicsController, 'edit']).use(middleware.auth())
     router.delete('/destroy/:slug', [ComicsController, 'destroy']).use(middleware.auth())
     router.post('/favorite/:slug', [ComicsController, 'favorite']).use(middleware.auth())
     router.post('/rating/:slug', [ComicsController, 'rate']).use(middleware.auth())

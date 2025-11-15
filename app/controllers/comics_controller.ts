@@ -12,10 +12,23 @@ export default class ComicsController {
    * @creator
    */
 async index({ inertia, auth }: HttpContext) {
-  const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+  const creator = await Creator
+    .query()
+    .where('user_id', auth.user!.id)
+    .firstOrFail()
 
-  const listComicByCreator = await Comic.query().where('creator_id', creator.id)
-  return inertia.render('comic/index', { listComicByCreator })
+  const listComicByCreator = await Comic
+    .query()
+    .where('creator_id', creator.id)
+    .preload('comicGenres')
+
+  return inertia.render('comic/index', {
+    listComicByCreator: listComicByCreator.map(c => ({
+      ...c.toJSON(),
+      genres: c.comicGenres.map(g => g.name)
+    })),
+    creator,
+  })
 }
 
   /**
@@ -104,31 +117,74 @@ async create({ inertia }: HttpContext) {
    */
 
 async edit({ params, inertia, auth }: HttpContext) {
-  const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
-
-  const comic = await Comic.query()
-    .where('slug', params.slug)
-    .where('creator_id', creator.id)
+  const creator = await Creator
+    .query()
+    .where('user_id', auth.user!.id)
     .firstOrFail()
 
-  return inertia.render('comic/edit', { comic })
+  const comic = await Comic
+    .query()
+    .where('slug', params.slug)
+    .where('creator_id', creator.id)
+    .preload('comicGenres') // jika nama relasinya ini
+    .firstOrFail()
+
+  // Ambil semua genre untuk select
+  const genres = await Genre.all()
+
+  return inertia.render('comic/edit', {
+    comic: {
+      ...comic.toJSON(),
+      genreIds: comic.comicGenres.map(g => g.id), // array id genre
+    },
+    genres: genres.map(g => g.toJSON()), // kirim plain object
+  })
 }
   /**
    * Handle form submission for the edit action
    * @creator
   */
 
-  async update({ params, response, request, auth }: HttpContext) {
-    const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+async update({ params, response, request, auth }: HttpContext) {
+  const creator = await Creator
+    .query()
+    .where('user_id', auth.user!.id)
+    .firstOrFail()
 
-    const comic = await Comic.query().where('slug', params.slug).where('creator_id', creator.id).firstOrFail()
+  const comic = await Comic
+    .query()
+    .where('slug', params.slug)
+    .where('creator_id', creator.id)
+    .firstOrFail()
 
-    const payload = request.only(['title', 'description', 'status', 'coverUrl', 'updateDay'])
+  // Ambil field
+  const payload = request.only([
+    'title',
+    'description',
+    'status',
+    'updateDay'
+  ])
 
-    await comic.merge(payload).save()
+  const genreIds = request.input('genreIds') || []
 
-    return response.redirect().back()
+  const cover = request.file('cover', {
+    size: '4mb',
+    extnames: ['jpg', 'png', 'jpeg', 'webp'],
+  })
+
+  if (cover) {
+    const fileName = `${Date.now()}.${cover.extname}`
+    await cover.move('uploads/comics', { name: fileName })
+    payload.coverUrl = `/uploads/comics/${fileName}`
   }
+
+  comic.merge(payload)
+  await comic.save()
+
+  await comic.related('comicGenres').sync(genreIds)
+
+  return response.redirect().toRoute('/comic/index')
+}
 
   /**
    * Delete record
