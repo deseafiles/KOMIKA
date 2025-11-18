@@ -32,6 +32,6 @@ export class MidtransService {
 
     const token = await this.snap.createTransactionToken(parameter)
 
-    return token
+    return token.toJSON()
   }
 }
