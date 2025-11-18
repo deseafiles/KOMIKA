@@ -1,17 +1,28 @@
 <script setup lang="ts">
-  import {Link, useForm } from '@inertiajs/vue3'
+import {Link, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 
-  const props = defineProps({
+const props = defineProps({
   listComicByCreator: {
     type: Object,
   }
-  })
+})
 
-  const form = useForm({})
-console.log(props.listComicByCreator)
-  const deleteComic = (slug: string) => {
-    form.delete(`/comic/destroy/${slug}`)
-  }
+const form = useForm({})
+const isOpen = ref<number | null>(null)
+
+const toggleDropdown = (id: number) => {
+  isOpen.value = isOpen.value === id ? null : id
+}
+
+const closeDropdown = () => {
+  isOpen.value = null
+}
+
+const deleteComic = (slug: string) => {
+  form.delete(`/comic/destroy/${slug}`)
+  closeDropdown()
+}
 </script>
 
 <template>
@@ -103,20 +114,45 @@ console.log(props.listComicByCreator)
             </td>
 
             <!-- Aksi -->
-            <td class="p-3 text-right space-x-2">
-              <Link
-                :href="`/comic/edit/${c.slug}`"
-                class="text-indigo-600 hover:underline"
-              >
-                Edit
-              </Link>
+            <td class="p-3 text-right relative">
 
+              <!-- Trigger -->
               <button
-                @click="deleteComic(c.slug)"
-                class="text-red-600 hover:underline"
+                @click="toggleDropdown(c.id)"
+                class="flex justify-center items-center size-9 rounded-lg border bg-white hover:bg-gray-100"
               >
-                Hapus
+                <svg class="size-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
               </button>
+
+              <!-- Dropdown -->
+              <div
+                v-if="isOpen === c.id"
+                class="absolute right-0 mt-2 w-44 bg-white shadow-lg border border-gray-200 rounded-lg p-1 z-50"
+              >
+                <Link
+                  :href="`/comic/edit/${c.slug}`"
+                  class="block px-4 py-2 text-sm hover:bg-gray-100"
+                  @click="closeDropdown()"
+                >
+                  Edit Komik
+                </Link>
+
+                <Link
+                    :href="`/episode/${c.slug}/index`"
+                  class="block px-4 py-2 text-sm hover:bg-gray-100"
+                  @click="closeDropdown()"
+                >
+                  Lihat Chapter
+                </Link>
+
+                <button
+                  @click="deleteComic(c.slug)"
+                  class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  Hapus Komik
+                </button>
+              </div>
+
             </td>
 
           </tr>

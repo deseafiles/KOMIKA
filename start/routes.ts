@@ -35,6 +35,8 @@ router.group(() => {
 
 router.group(() => {
   router.get('/show', [UsersController, 'show']).use(middleware.auth())
+  router.get('/edit/:username', [UsersController, 'edit']).use(middleware.auth())
+  router.put('/update/:username', [UsersController, 'update']).use(middleware.auth())
 })
   .prefix('/profile')
 
@@ -55,17 +57,20 @@ router
 
 //done
 router.group(() => {
-  router.get('/index/:slug', [EpisodesController, 'index'])
-  router.get('/create', [EpisodesController, 'create'])
+  router.get('/:slug/index', [EpisodesController, 'index']).use(middleware.auth())
+  router.get('/:slug/create', [EpisodesController, 'create'])
   router.get('/edit/:id', [EpisodesController, 'edit'])
-  router.post('/store', [EpisodesController, 'store'])
+  router.post('/:slug/store', [EpisodesController, 'store'])
+  router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show'])
   router.put('/update', [EpisodesController, 'update'])
   router.delete('/delete/:id', [EpisodesController, 'destroy'])
 })
   .prefix('/episode')
 
   router.group(() => {
-    router.post('/store/:id', [PagesController, 'store']).use(middleware.auth())
+    router.post('/:comicSlug/store/:episodeSlug', [PagesController, 'store']).use(middleware.auth())
+    router.get('/:comicSlug/create/:episodeSlug', [PagesController, 'create'])
+    router.delete('/destroy/:id', [PagesController, 'destroy'])
   })
   .prefix('/pages')
 

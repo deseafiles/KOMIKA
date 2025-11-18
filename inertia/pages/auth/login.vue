@@ -1,32 +1,64 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <form @submit.prevent="handleSubmit" class="bg-white p-8 rounded shadow-md w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 dark:from-neutral-900 dark:to-neutral-800 px-4">
 
-      <label class="block mb-2">Username</label>
-      <input
-        v-model="form.username"
-        class="w-full p-2 border rounded mb-4"
-        placeholder="Username"
-      />
+    <div class="w-full max-w-md bg-white dark:bg-neutral-900 rounded-xl shadow-xl p-8 animate-fadeIn">
+      <h2 class="text-3xl font-bold text-center text-blue-600 dark:text-blue-300 mb-2">KOMIKA</h2>
+      <p class="text-center text-gray-500 dark:text-gray-400 mb-6">Masuk untuk melanjutkan membaca</p>
 
-      <label class="bloc mb-2">Password</label>
-      <input
-        v-model="form.password"
-        class="w-full p-2 border rounded mb-4"
-        placeholder="Password"
-      />
+      <form @submit.prevent="handleSubmit" class="space-y-5">
 
-      <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-        Login
-      </button>
-    </form>
+        <!-- Username -->
+        <div>
+          <label class="block text-gray-700 dark:text-gray-300 mb-1">Username</label>
+          <input
+            v-model="form.username"
+            class="w-full p-3 bg-gray-50 dark:bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Masukkan username"
+          />
+          <p v-if="form.errors.username" class="text-red-500 text-sm mt-1">
+            {{ form.errors.username }}
+          </p>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-gray-700 dark:text-gray-300 mb-1">Password</label>
+          <input
+            type="password"
+            v-model="form.password"
+            class="w-full p-3 bg-gray-50 dark:bg-neutral-800 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="Masukkan password"
+          />
+          <p v-if="form.errors.password" class="text-red-500 text-sm mt-1">
+            {{ form.errors.password }}
+          </p>
+        </div>
+
+        <!-- Button -->
+        <button
+          type="submit"
+          :disabled="form.processing"
+          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 rounded-lg font-semibold transition"
+        >
+          <span v-if="!form.processing">Login</span>
+          <span v-else class="animate-pulse">Loading...</span>
+        </button>
+
+        <!-- Go to register -->
+        <p class="text-center text-sm mt-4 text-gray-600 dark:text-gray-400">
+          Belum punya akun?
+          <a href="/register" class="text-blue-600 hover:underline">Daftar</a>
+        </p>
+
+      </form>
+
+    </div>
+
   </div>
 </template>
 
 <script setup>
 import { useForm } from '@inertiajs/vue3'
-import { reactive } from 'vue'
 
 const form = useForm({
   username: '',
@@ -34,13 +66,18 @@ const form = useForm({
 })
 
 const handleSubmit = () => {
-  console.log('Submit clicked', form)
-  form.loading = true
   form.post('/login', {
-    onFinish: () => {
-      form.loading = false
-      form.reset('password')
-    },
+    onFinish: () => form.reset('password'),
   })
 }
 </script>
+
+<style scoped>
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

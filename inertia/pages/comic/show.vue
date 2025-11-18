@@ -44,7 +44,6 @@ const toggleFavorite = async () => {
   }
 }
 
-// rate comic
 const rateComic = async (value: number) => {
   userRating.value = value
   try {
@@ -54,12 +53,8 @@ const rateComic = async (value: number) => {
   }
 }
 
-const readEpisode = async () => {
-  try {
-  router.get(`/episode/index/${props.comic.slug}`)
-  } catch (error) {
-  console.log('Gagal menampilkan episode', error)
-  }
+const readEpisode = (episodeSlug: string) => {
+  router.get(`/episode/${props.comic.slug}/show/${episodeSlug}`)
 }
 </script>
 
@@ -100,18 +95,16 @@ const readEpisode = async () => {
 
     <!-- Favorite dan Rating -->
     <div class="flex flex-col sm:flex-row items-center gap-4 mb-8">
-      <!-- Favorite -->
       <button
         @click="toggleFavorite"
         class="flex items-center gap-1 text-lg font-medium transition hover:scale-105"
       >
         <span :class="isFavorited ? 'text-red-500' : 'text-gray-400'">❤️</span>
         <span class="text-gray-700 dark:text-gray-300">
-          {{ isFavorited ? 'Add to Favorite' : 'Favorited' }}
+          {{ isFavorited ? 'Favorited' : 'Add to Favorite' }}
         </span>
       </button>
 
-      <!-- Rating -->
       <div class="flex items-center">
         <button
           v-for="star in 5"
@@ -134,12 +127,30 @@ const readEpisode = async () => {
         :key="episode.id"
         class="border-b border-gray-200 dark:border-gray-700 py-3 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 px-3 rounded transition"
       >
-        <div>
-          <div @click="readEpisode" class="font-medium text-black dark:text-white">{{ episode.title }}</div>
-          <div class="text-sm text-gray-500">
-            {{ new Date(episode.publishedAt).toLocaleDateString() }}
+        <div class="flex items-center gap-3">
+          <img
+            v-if="episode.thumbnailUrl"
+            :src="episode.thumbnailUrl"
+            alt="Thumbnail"
+            class="w-16 h-20 object-cover rounded"
+          />
+          <div v-else class="w-16 h-20 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-sm text-gray-500">
+            No Image
+          </div>
+
+          <div>
+            <button
+              @click="readEpisode(episode.slug)"
+              class="text-left text-black dark:text-white font-medium hover:underline"
+            >
+              {{ episode.title }}
+            </button>
+            <div class="text-sm text-gray-500">
+              {{ new Date(episode.publishedAt).toLocaleDateString() }}
+            </div>
           </div>
         </div>
+
         <div class="text-gray-700 dark:text-gray-300 text-sm">
           {{ episode.coinPrice }} 💰
         </div>

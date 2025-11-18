@@ -14,9 +14,9 @@ export default class RegisterController {
     try {
       const user = await User.create({ email, username, password })
 
-      const verifyUrl = `http://localhost:3333/verify/${user.id}`
+      //const verifyUrl = `http://localhost:3333/verify/${user.id}`
       //return response.ok({ message: 'User berhasil dibuat', data: user })
-      await mail.send(new VerifyEmailNotification(user, verifyUrl))
+      //await mail.send(new VerifyEmailNotification(user, verifyUrl))
 
       await auth.use('web').login(user)
       return response.redirect().toRoute('home')
