@@ -54,6 +54,7 @@
     "vite": "^6.3.5"
   },
   "dependencies": {
+    "@adocasts.com/dto": "^0.0.10",
     "@adonisjs/auth": "^9.4.0",
     "@adonisjs/core": "^6.18.0",
     "@adonisjs/cors": "^2.2.1",
@@ -68,6 +69,7 @@
     "@vinejs/vine": "^3.0.1",
     "@vue/server-renderer": "^3.5.21",
     "edge.js": "^6.2.1",
+    "lucide-vue-next": "^0.553.0",
     "luxon": "^3.7.2",
     "midtrans-client": "^1.4.3",
     "pg": "^8.16.3",

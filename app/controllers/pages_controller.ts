@@ -1,4 +1,5 @@
 import Creator from '#models/creator'
+import Episode from '#models/episode'
 import Page from '#models/page'
 import { createPagesValidator } from '#validators/page'
 import type { HttpContext } from '@adonisjs/core/http'
@@ -9,72 +10,94 @@ export default class PagesController {
   /**
    * Display form to create a new record
    */
-  async create({ response, inertia, request }: HttpContext) {
-    if (request.accepts(['json'])) {
-      return response.ok({
-        message: 'Page Loaded',
-      })
+async create({ inertia, params }: HttpContext) {
+  const episode = await Episode
+    .query()
+    .where('slug', params.episodeSlug)
+    .whereHas('comics', q => q.where('slug', params.comicSlug))
+    .preload('comics')
+    .firstOrFail()
+
+  return inertia.render('page/create', {
+    episode: {
+      id: episode.id,
+      slug: episode.slug,
+      episodeNumber: episode.episodeNumber,
+      comicId: episode.comicId,
+      comicSlug: episode.comics.slug, // <- FIX
+      episodeSlug: episode.slug,
     }
-    return inertia.render('pages/create')
-  }
+  })
+}
 
   /**
    * Handle form submission for the create action
    */
-  async store({ request, response }: HttpContext) {
-    const { episodeId, pageNumber } = await request.validateUsing(createPagesValidator)
+async store({ request, response, params }: HttpContext) {
+  const episodeSlug = params.episodeSlug
+  const episode = await Episode
+    .query()
+    .where('slug', params.episodeSlug)
+    .firstOrFail()
 
-    const imageFiles = request.files('imageUrl', {
-      size: '2mb',
-      extnames: ['jpg', 'png', 'jpeg', 'webp'],
+  if (!episodeSlug) {
+    return response.badRequest('Episode tidak ditemukan di URL')
+  }
+
+  const { pageNumber } = await request.validateUsing(createPagesValidator)
+
+  const lastPage = await Page.query()
+    .where('episode_id', episode.id)
+    .orderBy('page_number', 'desc')
+    .first()
+
+  let startNumber = lastPage ? lastPage.pageNumber + 1 : 1
+
+  const imageFiles = request.files('imageUrl', {
+    size: '2mb',
+    extnames: ['jpg', 'png', 'jpeg', 'webp'],
+  })
+
+  const createdPages = []
+
+  for (const [index, image] of imageFiles.entries()) {
+    if (!image.isValid) continue
+
+    const fileName = `${Date.now()}_${image.clientName}`
+
+    const tempPath = app.makePath(`tmp/uploads/${fileName}`)
+    await image.move(app.makePath('tmp/uploads'), {
+      name: fileName,
+      overwrite: true,
     })
 
-    const createdPages = []
+    const outputPath = app.makePath(`storage/pages/${fileName}`)
+    const metadata = await sharp(tempPath).metadata()
 
-    for (const [index, image] of imageFiles.entries()) {
-      if (!image.isValid) continue
+    const imageWidth = metadata.width
+    const imageHeight = metadata.height
 
-      const fileName = `${Date.now()}_${image.clientName}`
-
-      const tempPath = app.makePath(`tmp/uploads/${fileName}`)
-      await image.move(app.makePath('tmp/uploads'), {
-        name: fileName,
-        overwrite: false,
-      })
-
-      const outputPath = app.makePath(`storage/pages/${fileName}`)
-      const metadata = await sharp(tempPath).metadata()
-      const imageWidth = metadata.width
-      const imageHeight = metadata.height
-
-      if (imageWidth && imageHeight && (imageWidth > 1000 || imageHeight > 2280)) {
-        return response.badRequest(
-          `Gambar ${image.clientName} terlalu besar (${imageWidth}x${imageHeight})`
-        )
-      }
-
-      await sharp(tempPath).resize(800, 1280, { fit: 'inside' }).toFile(outputPath)
-
-      const page = await Page.create({
-        episodeId,
-        pageNumber: pageNumber + index,
-        imageUrl: `/storage/pages/${fileName}`,
-        imageHeight,
-        imageWidth
-      })
-
-      createdPages.push(page)
+    if (imageWidth && imageHeight && (imageWidth > 1000 || imageHeight > 2280)) {
+      return response.badRequest(
+        `Gambar ${image.clientName} terlalu besar (${imageWidth}x${imageHeight})`
+      )
     }
 
-    if (request.accepts(['json'])) {
-      return response.ok({
-        message: 'Pages created successfully',
-        data: createdPages,
-      })
-    }
+    await sharp(tempPath).resize(800, 1280, { fit: 'inside' }).toFile(outputPath)
 
-    return response.redirect().back()
+    const page = await Page.create({
+      episodeId: episode.id,
+      pageNumber: startNumber + index,
+      imageUrl: `/storage/pages/${fileName}`,
+      imageHeight,
+      imageWidth,
+    })
+
+    createdPages.push(page)
   }
+
+  return response.redirect().back()
+}
   /**
    * Show individual record
    */

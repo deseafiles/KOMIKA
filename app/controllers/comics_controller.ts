@@ -25,7 +25,7 @@ async index({ inertia, auth }: HttpContext) {
   return inertia.render('comic/index', {
     listComicByCreator: listComicByCreator.map(c => ({
       ...c.toJSON(),
-      genres: c.comicGenres.map(g => g.name)
+      genres: c.comicGenres.map(g => g.name)   // kirim array nama genre
     })),
     creator,
   })

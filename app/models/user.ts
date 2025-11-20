@@ -77,6 +77,15 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare purchases: HasMany<typeof Purchase>
 
   @manyToMany(() => Episode, {
+    pivotTable: 'purchases',
+    localKey: 'id',
+    pivotForeignKey: 'user_id',
+    relatedKey: 'id',
+    pivotRelatedForeignKey: 'episode_id',
+  })
+  declare purchasedEpisodes: ManyToMany<typeof Episode>
+
+  @manyToMany(() => Episode, {
     pivotTable: 'episode_likes'
   })
   declare userLikes: ManyToMany<typeof Episode>
@@ -105,7 +114,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @afterCreate()
   static async createUserWallet(user: User) {
-    await UserWalet.create({
+    await UserWalet.firstOrCreate({
       userId: user.id,
       coinBalance: 0,
       totalSpent: 0,

@@ -59,9 +59,18 @@ export default class Episode extends BaseModel {
   declare comics: BelongsTo<typeof Comic>
 
   @hasMany(() => Purchase, {
-    foreignKey: 'episodeId',
+    foreignKey: 'episode_id',
   })
   declare purchases: HasMany<typeof Purchase>
+
+  @manyToMany(() => User, {
+    pivotTable: 'purchases',
+    localKey: 'id',
+    pivotForeignKey: 'episode_id',
+    relatedKey: 'id',
+    pivotRelatedForeignKey: 'user_id',
+  })
+  declare purchasedByUsers: ManyToMany<typeof User>
 
   @hasMany(() => Page, {
     foreignKey: 'episodeId',
