@@ -44,7 +44,7 @@ async store({ request, response, params }: HttpContext) {
     return response.badRequest('Episode tidak ditemukan di URL')
   }
 
-  const { pageNumber } = await request.validateUsing(createPagesValidator)
+ // const { pageNumber } = await request.validateUsing(createPagesValidator)
 
   const lastPage = await Page.query()
     .where('episode_id', episode.id)
@@ -71,7 +71,7 @@ async store({ request, response, params }: HttpContext) {
       overwrite: true,
     })
 
-    const outputPath = app.makePath(`storage/pages/${fileName}`)
+    const outputPath = app.makePath(`storage/pages-comic/${fileName}`)
     const metadata = await sharp(tempPath).metadata()
 
     const imageWidth = metadata.width
@@ -88,7 +88,7 @@ async store({ request, response, params }: HttpContext) {
     const page = await Page.create({
       episodeId: episode.id,
       pageNumber: startNumber + index,
-      imageUrl: `/storage/pages/${fileName}`,
+      imageUrl: `/storage/pages-comic/${fileName}`,
       imageHeight,
       imageWidth,
     })
