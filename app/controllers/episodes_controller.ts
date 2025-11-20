@@ -203,7 +203,7 @@ async show({ params, inertia, auth }: HttpContext) {
       await user.related('userReads').attach([params.id])
     }
   }
-console.log(episode.toJSON())
+
   return inertia.render('episode/show', { episode })
 }
 

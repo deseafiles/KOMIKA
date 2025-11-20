@@ -20,7 +20,6 @@ interface UserData {
 const page = usePage<{ userData: UserData }>()
 const userData = page.props.userData
 
-console.log(userData.userWallet.coinBalance)
 </script>
 
 <template>
@@ -29,7 +28,7 @@ console.log(userData.userWallet.coinBalance)
 
     <div class="mt-4">
       <p><strong>Username:</strong> {{ userData.username }}</p>
-      <p><strong>Saldo:</strong> {{ userData.userWallet.coinBalance }} koin</p>
+      <p><strong>Saldo:</strong> {{ userData.userWallet?.coinBalance }} koin</p>
     </div>
 
     <!-- Tampilkan hanya jika user punya data creator -->
