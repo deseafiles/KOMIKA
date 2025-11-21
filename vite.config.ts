@@ -16,4 +16,11 @@ export default defineConfig({
       '~/': `${getDirname(import.meta.url)}/inertia/`,
     },
   },
+
+  build: {
+    target: 'esnext'
+  },
+  ssr: {
+    target: 'node'
+  },
 })

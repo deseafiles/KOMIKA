@@ -20,9 +20,11 @@ import EpisodesController from '#controllers/episodes_controller'
 import DashboardAdminsController from '#controllers/admin/dashboard_admins_controller'
 import UsersController from '#controllers/users_controller'
 import PagesController from '#controllers/pages_controller'
+import CommentsController from '#controllers/comments_controller'
 
 router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
-
+router.get('/library', [HomeController, 'savedComic']).use(middleware.silentAuth())
+router.get('/search', [HomeController, 'search'])
 router.get('/admin', [DashboardAdminsController, 'index'])
 
 router.group(() => {
@@ -81,7 +83,13 @@ router.group(() => {
 // 🌍 Public reader routes
 //Route.get('/comics/:slug/episodes', 'EpisodesController.listByComic')
 //Route.get('/episodes/:id', 'EpisodesController.showPublic')
-
+router.group(() => {
+  router.get('/index/comic/:comicSlug/episode/:episodeSlug/', [CommentsController, 'index'])
+  router.post('/episode/:episodeSlug/store', [CommentsController, 'store']).use(middleware.auth())
+  router.delete('/:id/destroy', [CommentsController, 'destroy'])
+  router.post('/like/:id', [CommentsController, 'likeComment']).use(middleware.auth())
+})
+.prefix('/comment')
 router
   .group(() => {
     router.get('/index', [GenresController, 'index'])

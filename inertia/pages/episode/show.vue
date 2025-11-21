@@ -4,8 +4,10 @@
   import { Loader2 } from 'lucide-vue-next'
 import Page from '#models/page';
 import {computed, ref, watchEffect} from 'vue';
+import { Link } from '@inertiajs/vue3'
 
 const props = defineProps<{
+    episode,
     pages: Page[]
     pagesMeta: SimplePaginatorDtoMetaContract
   }>()
@@ -29,7 +31,10 @@ const WhenVisibleParams = computed(() => {
   console.log('WhenVisibleParams:', params)
   return params
 })
-console.log(pages)
+console.log(props.episode.slug);
+console.log(props.episode.comics.slug)
+console.log(JSON.stringify(props.episode, null, 2))
+//console.log(pages)
 </script>
 
 <template>
@@ -69,7 +74,7 @@ console.log(pages)
       </WhenVisible>
     </div>
   <Link
-    :href="`#`"
+      :href="`/comment/index/comic/${episode.comics.slug}/episode/${episode.slug}`"
     class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg flex items-center justify-center transition-all"
   >
   💬

@@ -113,13 +113,13 @@ const logout = () => {
             Home
           </Link>
           <a
-            href="#"
+            href="/search"
             class="font-medium text-gray-600 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
           >
             Search
           </a>
           <a
-            href="#"
+            href="/library"
             class="font-medium text-gray-600 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
           >
             Library

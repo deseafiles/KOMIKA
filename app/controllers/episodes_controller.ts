@@ -253,7 +253,7 @@ async show({ params, inertia, auth, request }: HttpContext) {
   }
 
   return inertia.render('episode/show', {
-    episode,
+    episode: episode.toJSON(),
     pages: inertia.merge(() => pages.toJSON().data),
       pagesMeta: pages.getMeta()
   })

@@ -1,5 +1,5 @@
 import Comment from '#models/comment'
-import User from '#models/user'
+import Episode from '#models/episode'
 import {createCommentValidator} from '#validators/comment'
 import type { HttpContext } from '@adonisjs/core/http'
 
@@ -7,46 +7,47 @@ export default class CommentsController {
   /**
    * Display a list of resource
    */
-  async index({ inertia, params }: HttpContext) {
-    const comment = await Comment
-                         .query()
-                         .preload('episodes', (episodeQuery) => {
-                            episodeQuery.where('id', params.id)
-                         })
-                         .preload('user')
+async index({ params, inertia }: HttpContext) {
+  const episode = await Episode.findByOrFail("slug", params.episodeSlug)
 
-    return inertia.render('comment/index', { comment })
-  }
+  const comments = await Comment
+    .query()
+    .where("episode_id", episode.id)
+    .preload("user")
+    .preload("episodes")
 
-  /**
-   * Display form to create a new record
-   */
-  async create({ inertia }: HttpContext) {
-    return inertia.render('comment/create')
-  }
+  return inertia.render("comment/index", {
+    episode,
+    comment: comments
+  })
+}
+
+  // /**
+  //  * Display form to create a new record
+  //  */
+  // async create({ inertia }: HttpContext) {
+  //   return inertia.render('comment/create')
+  // }
 
   /**
    * Handle form submission for the create action
    */
-  async store({ request, response }: HttpContext) {
-    const { episodeId, content, parentCommentId } = await request.validateUsing(createCommentValidator)
+async store({ params, request, response, auth }: HttpContext) {
+  const user = auth.user!
+  const { episodeSlug } = params
+  const { content, parentCommentId } = await request.validateUsing(createCommentValidator)
 
-    const comment = await Comment.create({
-      episodeId,
-      parentCommentId,
-      content,
-    })
+  const episode = await Episode.findByOrFail('slug', episodeSlug)
 
-    if (request.accepts(['json'])) {
-      return response.ok({
-        message: 'Comic created successfully',
-        data: comment
-      })
-    }
+  await Comment.create({
+    userId: user.id,
+    episodeId: episode.id,
+    parentCommentId,
+    content
+  })
 
-
-    return response.redirect().toRoute('/comment/index')
-  }
+  return response.redirect().back()
+}
 
   /**
    * Delete record
@@ -56,7 +57,7 @@ export default class CommentsController {
     const comment = await Comment
                          .query()
                          .where('id', params.id)
-                         .where('user_id', user.id)
+                         //.where('user_id', user.id)
                          .firstOrFail()
 
     await comment.delete()
@@ -73,6 +74,5 @@ export default class CommentsController {
       await user.related('userCommentLike').attach([params.id])
     }
   }
-
   //wip reply comment feature
 }
