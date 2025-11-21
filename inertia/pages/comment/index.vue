@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, router, useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 
 interface Episode {
   id: number
@@ -18,6 +19,7 @@ interface Comment {
   content: string
   createdAt: string
   user: User
+  isLike: boolean
   episodes: Episode[]
 }
 
@@ -26,12 +28,25 @@ const props = defineProps<{
   comment: Comment[]
 }>()
 
-console.log(props.comment[0]?.episodes)
 const form = useForm({
   content: '',
   episodeId: props.episode.id,
   parentCommentId: null
 })
+const likes = ref<Record<number, boolean>>({})
+
+props.comment.forEach((c) => {
+  likes.value[c.id] = c.isLike
+})
+
+const likeComment = async (commentId: number) => {
+  try {
+    router.post(`/comment/like/${commentId}`)
+    likes.value[commentId] = !likes.value[commentId]
+  } catch (error) {
+    console.log('Gagal menyukai komentar', error)
+  }
+}
 
 const submit = (e: Event) => {
   e.preventDefault()
@@ -77,8 +92,9 @@ const submit = (e: Event) => {
               </p>
               <p class="text-gray-700 whitespace-pre-line">{{ c.content }}</p>
                 <div class="text-gray-500">
-                  <a :href="`comment/like/${props.comment[0].id}`"></a>
-                  <span class="streamline-pixel--social-rewards-heart-like-circle">like</span>
+                  <button @click="likeComment(c.id)">
+                    <span class="streamline-pixel--social-rewards-heart-like-circle">like</span>
+                  </button>
                 </div>
             </div>
           </div>
