@@ -6,7 +6,6 @@
 | The routes file is used for defining the HTTP routes.
 |
 */
-
 import LoginController from '#controllers/auth/login_controller'
 import RegisterController from '#controllers/auth/register_controller'
 import ComicsController from '#controllers/comics_controller'
@@ -20,13 +19,16 @@ import EpisodesController from '#controllers/episodes_controller'
 import DashboardAdminsController from '#controllers/admin/dashboard_admins_controller'
 import UsersController from '#controllers/users_controller'
 import PagesController from '#controllers/pages_controller'
+import TransactionsController from '#controllers/transactions_controller'
 import CommentsController from '#controllers/comments_controller'
 
+// Home
 router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
 router.get('/library', [HomeController, 'savedComic']).use(middleware.silentAuth())
 router.get('/search', [HomeController, 'search'])
 router.get('/admin', [DashboardAdminsController, 'index'])
 
+// Auth
 router.group(() => {
   router.get('/register', [RegisterController, 'index']).as('register.index')
   router.post('/register', [RegisterController, 'store']).as('register.store')
@@ -35,14 +37,16 @@ router.group(() => {
   router.post('/logout', [LogoutController, 'handle'])
 })
 
-router.group(() => {
-  router.get('/show', [UsersController, 'show']).use(middleware.auth())
-  router.get('/edit/:username', [UsersController, 'edit']).use(middleware.auth())
-  router.put('/update/:username', [UsersController, 'update']).use(middleware.auth())
-})
+// Profile
+router
+  .group(() => {
+    router.get('/show', [UsersController, 'show']).use(middleware.auth())
+    router.get('/edit/:username', [UsersController, 'edit']).use(middleware.auth())
+    router.put('/update/:username', [UsersController, 'update']).use(middleware.auth())
+  })
   .prefix('/profile')
 
-//done, harusnya
+// Comics
 router
   .group(() => {
     router.get('/index', [ComicsController, 'index']).use(middleware.auth())
@@ -57,39 +61,44 @@ router
   })
   .prefix('/comic')
 
-//done
-router.group(() => {
-  router.get('/:slug/index', [EpisodesController, 'index']).use(middleware.auth())
-  router.get('/:slug/create', [EpisodesController, 'create'])
-  router.get('/edit/:id', [EpisodesController, 'edit'])
-  router.post('/:slug/store', [EpisodesController, 'store'])
-  router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show'])
-  router.put('/update', [EpisodesController, 'update'])
-  router.delete('/delete/:id', [EpisodesController, 'destroy'])
-})
+// Episodes
+router
+  .group(() => {
+    router.get('/:slug/index', [EpisodesController, 'index']).use(middleware.auth())
+    router.get('/:slug/create', [EpisodesController, 'create'])
+    router.get('/edit/:id', [EpisodesController, 'edit'])
+    router.post('/:slug/store', [EpisodesController, 'store'])
+    router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show'])
+    router.put('/update', [EpisodesController, 'update'])
+    router.delete('/delete/:id', [EpisodesController, 'destroy'])
+  })
   .prefix('/episode')
 
-  router.group(() => {
+// Pages
+router
+  .group(() => {
     router.post('/:comicSlug/store/:episodeSlug', [PagesController, 'store']).use(middleware.auth())
     router.get('/:comicSlug/create/:episodeSlug', [PagesController, 'create'])
     router.delete('/destroy/:id', [PagesController, 'destroy'])
   })
   .prefix('/pages')
 
+// Episode Like
 router.group(() => {
-  //router.get('/comics/episode/:id', [EpisodesController, 'listByComic'])
   router.post('/episode/like/:id', [EpisodesController, 'likeEpisode']).use(middleware.auth())
 })
-// 🌍 Public reader routes
-//Route.get('/comics/:slug/episodes', 'EpisodesController.listByComic')
-//Route.get('/episodes/:id', 'EpisodesController.showPublic')
-router.group(() => {
-  router.get('/index/comic/:comicSlug/episode/:episodeSlug/', [CommentsController, 'index'])
-  router.post('/episode/:episodeSlug/store', [CommentsController, 'store']).use(middleware.auth())
-  router.delete('/:id/destroy', [CommentsController, 'destroy']).use(middleware.auth())
-  router.post('/like/:id', [CommentsController, 'likeComment']).use(middleware.auth())
-})
-.prefix('/comment')
+
+// Comments
+router
+  .group(() => {
+    router.get('/index/comic/:comicSlug/episode/:episodeSlug/', [CommentsController, 'index'])
+    router.post('/episode/:episodeSlug/store', [CommentsController, 'store']).use(middleware.auth())
+    router.delete('/:id/destroy', [CommentsController, 'destroy']).use(middleware.auth())
+    router.post('/like/:id', [CommentsController, 'likeComment']).use(middleware.auth())
+  })
+  .prefix('/comment')
+
+// Genres
 router
   .group(() => {
     router.get('/index', [GenresController, 'index'])
@@ -99,7 +108,7 @@ router
   })
   .prefix('/admin/genres')
 
-//DONE TESTING USING POSTMAN
+// Coin Packages
 router
   .group(() => {
     router.get('/index', [CoinPackagesController, 'index'])
@@ -108,20 +117,27 @@ router
     router.get('/edit/:id', [CoinPackagesController, 'edit'])
     router.put('/update/:id', [CoinPackagesController, 'update'])
     router.delete('/destroy/:id', [CoinPackagesController, 'destroy'])
-    //router.get('/show/:id', [CoinPackagesController, 'show'])//hapus show coin
   })
   .prefix('/admin/coin')
 
-
-router.post('/midtrans/test', async ({ response }) => {
-  const service = new (await import('#services/midtrans_service')).MidtransService()
-
-  const token = await service.createTransaction({
-    id: 1,
-    name: 'Packet 1',
-    price: 15000,
+router
+  .group(() => {
+    router.post('/create', [TransactionsController, 'createTransaction']).use(middleware.auth())
+    router.post('/webhook', [TransactionsController, 'handleWebhook'])
+    router.get('/status/:orderId', [TransactionsController, 'checkStatus']).use(middleware.auth())
+    router.get('/history', [TransactionsController, 'getHistory']).use(middleware.auth())
   })
+  .prefix('/transaction')
 
-  return response.json({ token })
-})
-
+// Midtrans test
+// router.post('/midtrans/test', async ({ response }) => {
+//   const service = new (await import('#services/midtrans_service')).MidtransService()
+//
+//   const token = await service.createTransaction({
+//     id: 1,
+//     name: 'Packet 1',
+//     price: 15000,
+//   })
+//
+//   return response.json({ token })
+// })
