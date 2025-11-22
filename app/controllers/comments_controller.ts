@@ -57,14 +57,14 @@ async store({ params, request, response, auth }: HttpContext) {
     const comment = await Comment
                          .query()
                          .where('id', params.id)
-                         //.where('user_id', user.id)
+                         .where('user_id', user.id)
                          .firstOrFail()
 
     await comment.delete()
     return response.redirect().back()
   }
 
-  async likeComment({ params, auth}: HttpContext) {
+  async likeComment({ params, auth, response}: HttpContext) {
     const user = auth.user!
     const like = await user.related('userCommentLike').query().where('comment_id', params.id).first()
 
@@ -73,6 +73,8 @@ async store({ params, request, response, auth }: HttpContext) {
     } else {
       await user.related('userCommentLike').attach([params.id])
     }
+
+    return response.redirect().back()
   }
   //wip reply comment feature
 }

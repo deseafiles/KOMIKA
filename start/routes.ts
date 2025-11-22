@@ -86,7 +86,7 @@ router.group(() => {
 router.group(() => {
   router.get('/index/comic/:comicSlug/episode/:episodeSlug/', [CommentsController, 'index'])
   router.post('/episode/:episodeSlug/store', [CommentsController, 'store']).use(middleware.auth())
-  router.delete('/:id/destroy', [CommentsController, 'destroy'])
+  router.delete('/:id/destroy', [CommentsController, 'destroy']).use(middleware.auth())
   router.post('/like/:id', [CommentsController, 'likeComment']).use(middleware.auth())
 })
 .prefix('/comment')

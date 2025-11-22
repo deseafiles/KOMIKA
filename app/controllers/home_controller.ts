@@ -16,8 +16,12 @@ export default class HomeController {
     return inertia.render('home', { allComic })
   }
 
-async savedComic({ inertia, auth }: HttpContext) {
-  const user = auth.user!
+async savedComic({ inertia, auth, response }: HttpContext) {
+  const user = auth.user
+
+  if (!user) {
+    return response.redirect('/login')
+  }
 
   const favoriteComic = await Comic
     .query()

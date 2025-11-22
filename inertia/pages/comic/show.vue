@@ -54,7 +54,7 @@ const rateComic = async (value: number) => {
 }
 
 const readEpisode = (episodeSlug: string) => {
-  router.post(`/episode/${props.comic.slug}/show/${episodeSlug}`)
+  router.get(`/episode/${props.comic.slug}/show/${episodeSlug}`)
 }
 </script>
 

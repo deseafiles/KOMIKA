@@ -48,6 +48,14 @@ const likeComment = async (commentId: number) => {
   }
 }
 
+const deleteComment = async (commentId: number) => {
+  try{
+    router.delete(`/comment/${commentId}/destroy`)
+  } catch (error) {
+    console.log('Gagal menghapus komentar', error)
+  }
+}
+
 const submit = (e: Event) => {
   e.preventDefault()
   form.post(`/comment/episode/${props.episode.slug}/store`, {
@@ -85,6 +93,11 @@ const submit = (e: Event) => {
         >
           <!-- USER INFO -->
           <div class="flex items-center gap-3 mb-3">
+            <div class="flex items-end justify-end">
+              <button @click="deleteComment(c.id)">
+                Hapus
+              </button>
+            </div>
             <div>
               <p class="font-semibold text-gray-800">{{ c.user.username }}</p>
               <p class="text-xs text-gray-500">
