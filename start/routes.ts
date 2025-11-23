@@ -21,7 +21,7 @@ import UsersController from '#controllers/users_controller'
 import PagesController from '#controllers/pages_controller'
 import TransactionsController from '#controllers/transactions_controller'
 import CommentsController from '#controllers/comments_controller'
-
+import PurchasesController from '#controllers/purchases_controller'
 // Home
 router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
 router.get('/library', [HomeController, 'savedComic']).use(middleware.silentAuth())
@@ -66,11 +66,11 @@ router
   .group(() => {
     router.get('/:slug/index', [EpisodesController, 'index']).use(middleware.auth())
     router.get('/:slug/create', [EpisodesController, 'create'])
-    router.get('/edit/:id', [EpisodesController, 'edit'])
+    router.get('/edit/:slug', [EpisodesController, 'edit']).use(middleware.auth())
     router.post('/:slug/store', [EpisodesController, 'store'])
     router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show'])
-    router.put('/update', [EpisodesController, 'update'])
-    router.delete('/delete/:id', [EpisodesController, 'destroy'])
+    router.put('/update/:slug', [EpisodesController, 'update']).use(middleware.auth())
+    router.delete('/delete/:slug', [EpisodesController, 'destroy']).use(middleware.auth())
   })
   .prefix('/episode')
 
@@ -79,6 +79,8 @@ router
   .group(() => {
     router.post('/:comicSlug/store/:episodeSlug', [PagesController, 'store']).use(middleware.auth())
     router.get('/:comicSlug/create/:episodeSlug', [PagesController, 'create'])
+    router.get('/:episodeId/edit', [PagesController, 'edit']).use(middleware.auth())
+    router.put('/:episodeId/update/', [PagesController, 'update']).use(middleware.auth())
     router.delete('/destroy/:id', [PagesController, 'destroy'])
   })
   .prefix('/pages')
@@ -119,6 +121,8 @@ router
     router.delete('/destroy/:id', [CoinPackagesController, 'destroy'])
   })
   .prefix('/admin/coin')
+
+router.post('/create', [PurchasesController, 'buyEpisode']).use(middleware.auth())
 
 router
   .group(() => {

@@ -1,4 +1,3 @@
-<!-- inertia/pages/profile/show.vue -->
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Link, router, usePage } from '@inertiajs/vue3'

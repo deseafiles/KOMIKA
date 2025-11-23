@@ -1,4 +1,3 @@
-// app/controllers/transactions_controller.ts
 import type { HttpContext } from '@adonisjs/core/http'
 import Transaction from '#models/transaction'
 import CoinPackage from '#models/coin_package'
@@ -7,13 +6,10 @@ import { MidtransService } from '#services/midtrans_service'
 import { DateTime } from 'luxon'
 
 export default class TransactionsController {
-  /**
-   * POST /transaction/create
-   */
   async createTransaction({ request, response, auth }: HttpContext) {
     try {
       if (!auth.user) {
-        return response.unauthorized({ message: 'Anda harus login terlebih dahulu' })
+        return response.redirect().toRoute('/login')
       }
 
       const user = auth.user
@@ -64,16 +60,12 @@ export default class TransactionsController {
         },
       })
     } catch (error) {
-      console.error('❌ Error creating transaction:', error)
       return response.internalServerError({
         message: error.message || 'Failed to create transaction',
       })
     }
   }
 
-  /**
-   * POST /transaction/webhook
-   */
   async handleWebhook({ request, response }: HttpContext) {
     try {
       const payload = request.all()
@@ -91,7 +83,6 @@ export default class TransactionsController {
         transaction.status = 'settlement'
         transaction.isPaid = true
 
-        // FIX: gunakan DateTime
         if (settlement_time) {
           transaction.paidAt = DateTime.fromISO(settlement_time.replace(' ', 'T'))
         } else {
@@ -130,14 +121,10 @@ export default class TransactionsController {
 
       return response.ok({ message: 'Webhook processed' })
     } catch (error) {
-      console.error('❌ Webhook error:', error)
       return response.ok({ message: 'Webhook error handled' })
     }
   }
 
-  /**
-   * GET /transaction/status/:orderId
-   */
   async checkStatus({ params, response }: HttpContext) {
     try {
       const transaction = await Transaction.query()
@@ -159,9 +146,6 @@ export default class TransactionsController {
     }
   }
 
-  /**
-   * GET /transaction/history
-   */
   async getHistory({ auth, response }: HttpContext) {
     try {
       const transactions = await Transaction.query()

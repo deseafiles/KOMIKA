@@ -24,7 +24,7 @@ async create({ inertia, params }: HttpContext) {
       slug: episode.slug,
       episodeNumber: episode.episodeNumber,
       comicId: episode.comicId,
-      comicSlug: episode.comics.slug, // <- FIX
+      comicSlug: episode.comics.slug,
       episodeSlug: episode.slug,
     }
   })
@@ -105,29 +105,50 @@ async store({ request, response, params }: HttpContext) {
   /**
    * Edit individual record
    */
-  async edit({ params, inertia, auth }: HttpContext) {
-    const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+async edit({ params, inertia, auth }: HttpContext) {
+  const user = auth.user!
+  const creator = await Creator.query().where('user_id', user.id).firstOrFail()
 
-    const pages = await Page.query().where('episode_id', params.id).preload('episodes', (episodeQuery) => {
-      episodeQuery.where('creator_id', creator.id)
+  const episode = await Episode.findOrFail(params.episodeId)
+
+  const pages = await Page.query()
+    .where('episode_id', episode.id)
+    .preload('episodes', (q) => {
+      q.preload('comics', (c) => {
+        c.where('creator_id', creator.id)
+      })
     })
-    .firstOrFail()
 
-    return inertia.render('pages/edit',  { pages })
-  }
+  return inertia.render('page/edit', {
+    episode: episode.toJSON(),
+    pages: pages.map(p => p.toJSON()),
+  })
+}
+public async update({ params, request, response }: HttpContextContract) {
+    const pagesData = request.input('pages') || []
+    const files = request.files('pages')
 
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ params, request, response }: HttpContext) {
-    const page = await Page.findOrFail(params.id)
+    for (const updateData of pagesData) {
+      const page = await Page.find(updateData.id)
+      if (!page) continue
 
-    const payload = request.only(['pageNumber', 'imageUrl'])
+      page.pageNumber = updateData.pageNumber
 
-    await page.merge(payload).save()
+      const file = files.find(f => f.clientName === updateData.fileName)
+      if (file) {
+        await file.move(Application.makePath('storage/pages'), {
+          name: `${Date.now()}-${file.clientName}`,
+          overwrite: true,
+        })
+        page.imageUrl = `/storage/pages/${file.clientName}`
+      }
+
+      await page.save()
+    }
 
     return response.redirect().back()
-  }
+
+}
 
   /**
    * Delete record

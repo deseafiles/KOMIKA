@@ -1,130 +1,97 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { usePage, Link, router } from '@inertiajs/vue3'
 import type { SharedProps } from '@adonisjs/inertia/types'
-import { ref } from 'vue'
 
-// Ambil data dari Inertia shared props
 const page = usePage<SharedProps>()
 const user = page.props.user
 
-const isOpen = ref(false)
+const isDropdownOpen = ref(false)
+const isMobileMenuOpen = ref(false)
 
-const toggleDropdown = () => {
-  isOpen.value = !isOpen.value
-}
+const toggleDropdown = () => { isDropdownOpen.value = !isDropdownOpen.value }
+const closeDropdown = () => { isDropdownOpen.value = false }
 
-const closeDropdown = () => {
-  isOpen.value = false
-}
+const toggleMobileMenu = () => { isMobileMenuOpen.value = !isMobileMenuOpen.value }
 
 const logout = () => {
   router.post('/logout', {}, {
     onSuccess: () => {
-      console.log('Logout berhasil')
       closeDropdown()
     },
   })
 }
-
-
 </script>
 
 <template>
-  <header
-    class="flex flex-wrap sm:justify-start sm:flex-nowrap w-full bg-white text-sm py-3 dark:bg-neutral-800"
-  >
-    <nav
-      class="max-w-[85rem] w-full mx-auto px-4 flex flex-wrap basis-full items-center justify-between"
-    >
-      <span
-        class="sm:order-1 flex-none text-xl font-bold dark:text-white focus:outline-hidden focus:opacity-80"
-      >
-        KOMIKA
-      </span>
+  <header class="bg-white dark:bg-neutral-800 shadow-sm">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <Link href="/" class="text-xl font-bold dark:text-white">KOMIKA</Link>
+        </div>
 
-      <!-- Bagian kanan -->
-      <div class="sm:order-3 flex items-center gap-x-2">
-        <!-- Publish selalu muncul -->
-        <Link
-          href="/comic/create"
-          class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700"
-        >
-          Publish
-        </Link>
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex items-center gap-4">
+          <Link href="/" class="text-gray-600 dark:text-neutral-300 hover:text-blue-500">Home</Link>
+          <Link href="/search" class="text-gray-600 dark:text-neutral-300 hover:text-blue-500">Search</Link>
+          <Link href="/library" class="text-gray-600 dark:text-neutral-300 hover:text-blue-500">Library</Link>
 
-        <template v-if="!user">
+          <!-- Publish desktop only -->
           <Link
-            href="/login"
-            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700"
+            v-if="user"
+            href="/comic/create"
+            class="py-2 px-3 items-center text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-700"
           >
-            Login
+            Publish
           </Link>
+
+          <!-- User Dropdown -->
+          <div v-if="user" class="relative">
+            <button @click="toggleDropdown" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white">
+              {{ user.username }}
+            </button>
+
+            <div
+              v-if="isDropdownOpen"
+              @click.outside="closeDropdown"
+              class="absolute right-0 mt-2 w-40 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg z-50"
+            >
+              <Link href="/profile/show" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700">Lihat Profil</Link>
+              <Link href="/comic/index" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700">Komik Saya</Link>
+              <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700">Logout</button>
+            </div>
+          </div>
+
+          <template v-else>
+            <Link href="/login" class="px-3 py-2 rounded-lg border border-gray-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white">Login</Link>
+          </template>
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="flex items-center md:hidden">
+          <button @click="toggleMobileMenu" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 dark:text-neutral-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-700">
+            <span v-if="!isMobileMenuOpen">☰</span>
+            <span v-else>✕</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div v-if="isMobileMenuOpen" class="md:hidden mt-2 space-y-1 bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-lg">
+        <Link href="/" class="block px-2 py-1 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Home</Link>
+        <Link href="/search" class="block px-2 py-1 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Search</Link>
+        <Link href="/library" class="block px-2 py-1 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Library</Link>
+
+        <template v-if="user">
+          <Link href="/profile/show" class="block px-2 py-1 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Profil</Link>
+          <button @click="logout" class="w-full text-left px-2 py-1 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Logout</button>
         </template>
 
         <template v-else>
-          <div class="relative">
-            <button
-              @click="toggleDropdown"
-              class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs dark:bg-neutral-800 dark:border-neutral-700 dark:text-white hover:bg-gray-50 dark:hover:bg-neutral-700"
-            >
-            {{user.username}}
-            </button>
-
-            <!-- Dropdown pakai v-if -->
-            <div
-              v-if="isOpen"
-              @click.outside="closeDropdown"
-              class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-neutral-800 dark:border-neutral-700 z-50"
-            >
-              <Link
-                href="/profile/show"
-                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700"
-              >
-                Lihat Profil
-              </Link>
-
-              <Link
-                href="/comic/index"
-                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700"
-              >
-                Komik Saya
-              </Link>
-
-              <button
-                @click="logout"
-                class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
+          <Link href="/login" class="block px-2 py-1 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Login</Link>
         </template>
-      </div>
-
-      <!-- Navigasi -->
-      <div
-        id="hs-navbar-alignment"
-        class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow sm:grow-0 sm:basis-auto sm:block sm:order-2"
-      >
-        <div
-          class="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:mt-0 sm:ps-5"
-        >
-          <Link href="/" class="font-medium text-blue-500" aria-current="page">
-            Home
-          </Link>
-          <a
-            href="/search"
-            class="font-medium text-gray-600 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
-          >
-            Search
-          </a>
-          <a
-            href="/library"
-            class="font-medium text-gray-600 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
-          >
-            Library
-          </a>
-        </div>
       </div>
     </nav>
   </header>
