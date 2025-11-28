@@ -12,6 +12,10 @@ const submit = () => {
   console.log("Dipencet")
   form.post('/admin/coin/store')
 }
+
+const goBack = () => {
+  window.history.back()
+}
 </script>
 
 <template>
@@ -68,12 +72,12 @@ const submit = () => {
 
         <!-- Tombol Aksi -->
         <div class="flex justify-end gap-3 mt-6">
-          <Link
-            href="/admin/coin/index"
+          <button
+            @click="goBack"
             class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
           >
             Batal
-          </Link>
+          </button>
           <button
             type="submit"
             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"

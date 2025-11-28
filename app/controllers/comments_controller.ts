@@ -14,11 +14,20 @@ async index({ params, inertia }: HttpContext) {
     .query()
     .where("episode_id", episode.id)
     .preload("user")
-    .preload("episodes")
+    .preload("episodes", c => {
+      c.preload('comics')
+    })
+    .preload("commentLike")
+
+  const commentsWithLikeCount = comments.map(c => ({
+    ...c.serialize(),
+    likeCount: c.commentLike.length,
+    isLike: c.commentLike.some(u => u.id === 1)
+  }))
 
   return inertia.render("comment/index", {
     episode,
-    comment: comments
+    comment: commentsWithLikeCount
   })
 }
 

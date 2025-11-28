@@ -27,6 +27,16 @@ router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth(
 router.get('/library', [HomeController, 'savedComic']).use(middleware.silentAuth())
 router.get('/search', [HomeController, 'search']).use(middleware.silentAuth())
 router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage').use(middleware.isAdmin())
+// router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage')
+router.get('/admin/users', [DashboardAdminsController, 'getAllUsers']).use(middleware.isAdmin())
+router.get('/admin/comics', [DashboardAdminsController, 'getAllComic']).use(middleware.isAdmin())
+
+router.post('/users/:id/ban', [DashboardAdminsController, 'banUser']).use(middleware.isAdmin())
+router.post('/users/:id/unban', [DashboardAdminsController, 'unbanUser']).use(middleware.isAdmin())
+router.post('/comics/:id/ban', [DashboardAdminsController, ''])
+router.post('/comics/:id/unban', [DashboardAdminsController, ''])
+
+router.get('/ban-page', [HomeController, 'banPage']).as('banPage')
 
 // Auth
 router.group(() => {
@@ -93,7 +103,7 @@ router.group(() => {
 // Comments
 router
   .group(() => {
-    router.get('/index/comic/:comicSlug/episode/:episodeSlug/', [CommentsController, 'index'])
+    router.get('/index/comic/:comicSlug/episode/:episodeSlug/', [CommentsController, 'index']).use(middleware.silentAuth())
     router.post('/episode/:episodeSlug/store', [CommentsController, 'store']).use(middleware.auth())
     router.delete('/:id/destroy', [CommentsController, 'destroy']).use(middleware.auth())
     router.post('/like/:id', [CommentsController, 'likeComment']).use(middleware.auth())
@@ -127,14 +137,14 @@ router.post('/create', [PurchasesController, 'buyEpisode']).use(middleware.auth(
 router
   .group(() => {
     router.post('/create', [TransactionsController, 'createTransaction']).use(middleware.auth())
-    router.post('/webhook', [TransactionsController, 'handleWebhook']) // public
-    router.get('/status/:orderId', [TransactionsController, 'checkStatus']) // public - untuk polling
+    router.post('/webhook', [TransactionsController, 'handleWebhook']) // public aja
+    router.get('/status/:orderId', [TransactionsController, 'checkStatus']) //public ajaa
     router.get('/history', [TransactionsController, 'getHistory']).use(middleware.auth())
   })
   .prefix('/transaction')
 
 
 router.post('/episodes/:id/buy', [PurchasesController, 'buyEpisode']).use(middleware.auth())
-router.get('/episodes/:id/check', [PurchasesController, 'checkPurchase']).use(middleware.auth())
-router.get('/purchases', [PurchasesController, 'index']).use(middleware.auth())
-router.get('/wallet', [PurchasesController, 'getWallet']).use(middleware.auth())
+// router.get('/episodes/:id/check', [PurchasesController, 'checkPurchase']).use(middleware.auth())
+// router.get('/purchases', [PurchasesController, 'index']).use(middleware.auth())
+// router.get('/wallet', [PurchasesController, 'getWallet']).use(middleware.auth())

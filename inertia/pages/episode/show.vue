@@ -4,6 +4,7 @@ import { SimplePaginatorDtoMetaContract } from '@adocasts.com/dto/types';
 import ModalPurchaseEpisode from './ModalPurchaseEpisode.vue'
 import Page from '#models/page';
 import { ref, computed, watchEffect } from 'vue';
+import { router } from '@inertiajs/vue3'
 
 const props = defineProps<{
   episode: any,
@@ -37,6 +38,11 @@ const ScrollToTop = () => {
     behavior: 'smooth'
   })
 }
+
+// Tombol back
+const backPage = () => {
+  router.get(`/comic/show/${props.episode.comics.slug}`)
+}
 </script>
 
 <template>
@@ -50,14 +56,26 @@ const ScrollToTop = () => {
       :purchased="purchased"
     />
 
+    <!-- Header dengan Back -->
     <header
       class="w-full sticky top-0 z-10 bg-white/80 dark:bg-black/70 backdrop-blur-md
              border-b border-gray-200 dark:border-neutral-800 py-4 shadow-sm"
     >
-      <div class="max-w-3xl mx-auto text-center px-4">
-        <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-200">
+      <div class="max-w-3xl mx-auto flex items-center justify-between px-4">
+        <!-- Tombol Back -->
+        <button
+          @click="backPage"
+          class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium
+                 hover:text-gray-900 dark:hover:text-white transition"
+        >
+          ← Kembali
+        </button>
+        <!-- Episode Title -->
+        <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-200 truncate">
           {{ episode.title }}
         </h1>
+        <!-- Placeholder untuk keseimbangan flex -->
+        <div class="w-20"></div>
       </div>
     </header>
 
@@ -78,17 +96,18 @@ const ScrollToTop = () => {
       </div>
     </div>
 
-      <!-- Scroll To Top Button -->
+    <!-- Scroll To Top Button -->
     <button
       @click="ScrollToTop"
       class="fixed bottom-6 left-6 bg-white dark:bg-neutral-900 p-3 rounded-full shadow-lg border border-gray-200 dark:border-neutral-700 hover:scale-105 transition"
     >
-    <img
-      src="/inertia/assets/scrollToTopButton.png"
-      class="w-6 h-6 object-contain"
-      alt="Button Scroll To Top"
-    />
+      <img
+        src="/inertia/assets/scrollToTopButton.png"
+        class="w-6 h-6 object-contain"
+        alt="Button Scroll To Top"
+      />
     </button>
+
     <!-- Infinite Scroll -->
     <div v-if="hasMorePages" class="w-full flex justify-center py-10">
       <WhenVisible :params="WhenVisibleParams">

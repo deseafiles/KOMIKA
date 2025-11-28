@@ -56,10 +56,25 @@ const rateComic = async (value: number) => {
 const readEpisode = (episodeSlug: string) => {
   router.get(`/episode/${props.comic.slug}/show/${episodeSlug}`)
 }
+
+const backPage = () => {
+  router.get('/')
+}
 </script>
 
 <template>
   <div class="flex flex-col min-h-screen justify-center items-center py-8 px-4">
+
+    <!-- Tombol Back -->
+    <div class="w-full max-w-2xl mb-4">
+      <button
+        @click="backPage"
+        class="px-4 py-2 bg-gray-300 text-gray-800 font-medium rounded-lg hover:bg-gray-400 transition flex items-center gap-2"
+      >
+        ← Kembali
+      </button>
+    </div>
+
     <!-- Cover -->
     <img
       :src="comic.coverUrl || '/placeholder.png'"
@@ -156,5 +171,6 @@ const readEpisode = (episodeSlug: string) => {
         </div>
       </div>
     </div>
+
   </div>
 </template>

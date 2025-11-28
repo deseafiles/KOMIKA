@@ -1,12 +1,25 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 
 const navItems = [
   { name: 'Dashboard', href: '/admin/', icon: '🏠' },
   { name: 'Manajemen Koin', href: '/admin/coin/index', icon: '🪙' },
   { name: 'Genre Komik', href: '/admin/genres/index', icon: '📚' },
-  { name: 'Laporan Pengguna', href: '#', icon: '🚫' },
+  { name: 'Laporan Pengguna', href: '/admin/users', icon: '🚫' },
+  {name: 'Laporan Komik', href: '/admin/comics', icon:'✏️'}
 ]
+
+const logout = () => {
+  router.post('/logout', {}, {
+    onSuccess: () => {
+      router.get('/login')
+    },
+    onError: (errors) => {
+      console.error('Logout gagal:', errors)
+    },
+  })
+}
 </script>
 
 <template>
@@ -31,7 +44,7 @@ const navItems = [
       </nav>
 
       <div class="border-t border-gray-100 p-4">
-        <button
+        <button @click="logout"
           class="w-full flex items-center justify-center gap-2 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
         >
           🚪 Keluar

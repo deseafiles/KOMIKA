@@ -37,7 +37,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare isBanned: boolean
 
-
   //hapus isDelete
   @column()
   declare isDeleted: boolean
@@ -120,6 +119,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
       coinBalance: 0,
       totalSpent: 0,
       totalPurchased: 0,
+      totalMoneySpent:0.
       })
     }
   }

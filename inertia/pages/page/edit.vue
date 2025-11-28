@@ -48,6 +48,10 @@ const submit = () => {
     onError: (errors) => console.error(errors)
   })
 }
+
+const goBack = () => {
+  window.history.back()
+}
 </script>
 
 <template>
@@ -56,9 +60,9 @@ const submit = () => {
       <h1 class="text-2xl font-bold text-gray-900">
         Edit Pages • Episode {{ props.episode.episodeNumber }}
       </h1>
-      <Link :href="`/episode/${props.episode.comicSlug}/index`" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm">
+      <button @click="goBack" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm">
         Kembali
-      </Link>
+      </button>
     </div>
 
     <form @submit.prevent="submit" class="space-y-6">

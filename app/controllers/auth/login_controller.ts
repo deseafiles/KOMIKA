@@ -7,25 +7,24 @@ export default class LoginController {
     return inertia.render('auth/login')
   }
 
-async store({ request, response, auth }: HttpContext) {
+async store({ request, response, auth, session }: HttpContext) {
   const { username, password } = await request.validateUsing(loginValidator)
 
   try {
     const user = await User.verifyCredentials(username, password)
-
-    // Login dulu
     await auth.use('web').login(user)
 
-    // Lalu redirect sesuai role
     if (user.isAdmin === true) {
       return response.redirect().toRoute('AdminHomepage')
+    } else if(user.isBanned === true){
+      return response.redirect().toRoute('banPage')
     } else {
       return response.redirect().toRoute('home')
     }
 
   } catch (error) {
-    console.error(error)
-    return response.send('User Gagal Login')
+    session.flash('errors', { E_INVALID_CREDENTIALS: 'Username atau password salah.' })
+  return response.redirect().back()
   }
 }
 }

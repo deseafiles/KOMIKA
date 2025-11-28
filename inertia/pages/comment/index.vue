@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3'
+import {SharedProps} from '@adonisjs/inertia/types'
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 interface Episode {
@@ -35,9 +36,14 @@ const form = useForm({
 })
 const likes = ref<Record<number, boolean>>({})
 
+// Inisialisasi likes
 props.comment.forEach((c) => {
   likes.value[c.id] = c.isLike
 })
+
+// Ambil user login
+const page = usePage<SharedProps>()
+const user = page.props.user
 
 const likeComment = async (commentId: number) => {
   try {
@@ -49,7 +55,7 @@ const likeComment = async (commentId: number) => {
 }
 
 const deleteComment = async (commentId: number) => {
-  try{
+  try {
     router.delete(`/comment/${commentId}/destroy`)
   } catch (error) {
     console.log('Gagal menghapus komentar', error)
@@ -67,16 +73,40 @@ const submit = (e: Event) => {
     }
   })
 }
+
+const goBack = () => {
+  window.history.back()
+}
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 py-10">
+  <div class="min-h-screen bg-gray-50">
     <Head title="Komentar" />
 
-    <div class="max-w-3xl mx-auto px-4">
-      <h1 class="text-3xl font-bold mb-6">Daftar Komentar</h1>
+    <!-- Header -->
+    <header
+      class="sticky top-0 z-10 bg-white/80 dark:bg-black/70 backdrop-blur-md border-b border-gray-200 dark:border-neutral-800 py-4 shadow-sm"
+    >
+      <div class="max-w-3xl mx-auto flex items-center justify-between px-4">
+        <!-- Tombol Back -->
+        <button
+          @click="goBack"
+          class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium
+                 hover:text-gray-900 dark:hover:text-white transition"
+        >
+          ← Kembali
+        </button>
 
-      <!-- TIDAK ADA KOMENTAR -->
+        <!-- Judul -->
+        <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-200 truncate">
+          Komentar: {{ props.episode.title }}
+        </h1>
+
+        <div class="w-20"></div>
+      </div>
+    </header>
+
+    <div class="max-w-3xl mx-auto px-4 py-10">
       <div
         v-if="!props.comment || props.comment.length === 0"
         class="text-center text-gray-500 py-16"
@@ -92,28 +122,37 @@ const submit = (e: Event) => {
           class="bg-white shadow rounded-lg p-5"
         >
           <!-- USER INFO -->
-          <div class="flex items-center gap-3 mb-3">
-            <div class="flex items-end justify-end">
-              <button @click="deleteComment(c.id)">
-                Hapus
-              </button>
-            </div>
+          <div class="flex items-start justify-between mb-3">
             <div>
               <p class="font-semibold text-gray-800">{{ c.user.username }}</p>
               <p class="text-xs text-gray-500">
                 {{ new Date(c.createdAt).toLocaleString() }}
               </p>
               <p class="text-gray-700 whitespace-pre-line">{{ c.content }}</p>
-                <div class="text-gray-500">
-                  <button @click="likeComment(c.id)">
-                    <span class="streamline-pixel--social-rewards-heart-like-circle">like</span>
-                  </button>
-                </div>
+            </div>
+
+            <!-- Tombol aksi: Like & Hapus -->
+            <div class="flex flex-col items-end gap-2">
+              <!-- Hapus hanya untuk user pembuat -->
+              <button
+                v-if="user.id === c.user.id"
+                @click="deleteComment(c.id)"
+                class="text-red-500 text-sm hover:underline"
+              >
+                Hapus
+              </button>
+
+              <!-- Like -->
+              <button
+                @click="likeComment(c.id)"
+                class="flex items-center gap-1 text-sm text-gray-600 hover:text-red-500"
+              >
+                <span :class="likes[c.id] ? 'text-red-500' : 'text-gray-400'">❤️</span>
+                <span>{{ likes[c.id] ? 'Liked' : 'Like' }}</span>
+                <span class="text-gray-500 ml-1">({{ c.likeCount || 0 }})</span>
+              </button>
             </div>
           </div>
-
-          <!-- COMMENT CONTENT -->
-
 
           <!-- RELATED EPISODE -->
           <div v-if="c.episodes.length" class="mt-4 text-sm text-gray-600">

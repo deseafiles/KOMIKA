@@ -62,5 +62,7 @@ async search({ request, inertia }: HttpContext) {
     comics,
   })
 }
-
+  async banPage({ inertia }: HttpContext){
+    return inertia.render('admin/UserManagement/BanPage')
+  }
 }

@@ -38,11 +38,6 @@ const coinPackages = computed(() => {
 const showCoinModal = ref(false)
 const successMessage = ref('')
 
-console.log('Profile Props:', {
-  userData: userData.value,
-  coinPackages: coinPackages.value,
-})
-
 const logout = () => {
   router.post('/logout')
 }
@@ -59,10 +54,17 @@ const handlePurchaseSuccess = (message: string) => {
     successMessage.value = ''
   }, 5000)
 }
+
+// Tombol Back
+const goBack = () => {
+  window.history.back()
+}
 </script>
 
 <template>
   <div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- Pesan sukses -->
     <div
       v-if="successMessage"
       class="p-4 bg-green-100 dark:bg-green-900/30 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 rounded-lg animate-pulse"
@@ -71,10 +73,20 @@ const handlePurchaseSuccess = (message: string) => {
     </div>
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-      <h1 class="text-2xl font-bold text-gray-800 dark:text-white">
+    <div class="flex items-center justify-between mb-4">
+      <button
+        @click="goBack"
+        class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium
+               hover:text-gray-900 dark:hover:text-white transition"
+      >
+        ← Kembali
+      </button>
+
+      <h1 class="text-2xl font-bold text-gray-800 dark:text-white truncate">
         Profil Pengguna
       </h1>
+
+      <div class="w-20"></div> <!-- Spacer kanan -->
     </div>
 
     <!-- Card User -->
@@ -146,7 +158,7 @@ const handlePurchaseSuccess = (message: string) => {
       </Link>
     </div>
 
-    <!-- Coin Packages List (untuk referensi tanpa modal) -->
+    <!-- Coin Packages List -->
     <div v-if="coinPackages.length > 0" class="bg-white dark:bg-neutral-900 shadow-md rounded-xl p-6 border border-gray-100 dark:border-neutral-800">
       <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Paket Koin Tersedia</h2>
 
@@ -188,20 +200,13 @@ const handlePurchaseSuccess = (message: string) => {
       @close="closeCoinModal"
       @success="handlePurchaseSuccess"
     />
-
   </div>
 </template>
 
 <style scoped>
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {

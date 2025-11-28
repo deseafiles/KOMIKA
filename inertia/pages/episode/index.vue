@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, useForm } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 interface Episode {
@@ -38,11 +38,18 @@ const deleteEpisode = (slug: string) => {
   form.delete(`/episode/delete/${slug}`)
   closeDropdown()
 }
+
+const goBack = () => {
+  router.get('/comic/index')
+}
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 p-6">
     <div class="flex justify-between items-center mb-6">
+      <button @click="goBack" class="">
+        Kembali
+      </button>
       <h1 class="text-3xl font-bold text-gray-800">Episode — {{ props.comic.title }}</h1>
       <Link
         :href="`/episode/${props.comic.slug}/create`"

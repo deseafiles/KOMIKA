@@ -78,12 +78,17 @@ const form = useForm({
   email: '',
   username: '',
   password: '',
+  errors: {},
 })
 
 const handleSubmit = () => {
+try{
   form.post('/register', {
     onFinish: () => form.reset('password'),
   })
+  } catch(err) {
+    form.errors = err.errors
+  }
 }
 </script>
 
