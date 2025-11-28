@@ -23,7 +23,7 @@ import TransactionsController from '#controllers/transactions_controller'
 import CommentsController from '#controllers/comments_controller'
 import PurchasesController from '#controllers/purchases_controller'
 // Home
-router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
+router.get('/', [HomeController, 'index']).as('home').use([middleware.silentAuth(), middleware.bannedUser()])
 router.get('/library', [HomeController, 'savedComic']).use(middleware.silentAuth())
 router.get('/search', [HomeController, 'search']).use(middleware.silentAuth())
 router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage').use(middleware.isAdmin())
@@ -33,10 +33,10 @@ router.get('/admin/comics', [DashboardAdminsController, 'getAllComic']).use(midd
 
 router.post('/users/:id/ban', [DashboardAdminsController, 'banUser']).use(middleware.isAdmin())
 router.post('/users/:id/unban', [DashboardAdminsController, 'unbanUser']).use(middleware.isAdmin())
-router.post('/comics/:id/ban', [DashboardAdminsController, ''])
-router.post('/comics/:id/unban', [DashboardAdminsController, ''])
+// router.post('/comics/:id/ban', [DashboardAdminsController, ''])
+// router.post('/comics/:id/unban', [DashboardAdminsController, ''])
 
-router.get('/ban-page', [HomeController, 'banPage']).as('banPage')
+router.get('/ban-page', [HomeController, 'banPage'])
 
 // Auth
 router.group(() => {
@@ -50,7 +50,7 @@ router.group(() => {
 // Profile
 router
   .group(() => {
-    router.get('/show', [UsersController, 'show']).use(middleware.auth())
+    router.get('/show', [UsersController, 'show']).use([middleware.auth(), middleware.bannedUser()])
     router.get('/edit/:username', [UsersController, 'edit']).use(middleware.auth())
     router.put('/update/:username', [UsersController, 'update']).use(middleware.auth())
   })
