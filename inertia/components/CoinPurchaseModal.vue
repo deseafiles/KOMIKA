@@ -1,4 +1,3 @@
-<!-- inertia/components/CoinPurchaseModal.vue -->
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'

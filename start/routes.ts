@@ -25,8 +25,8 @@ import PurchasesController from '#controllers/purchases_controller'
 // Home
 router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
 router.get('/library', [HomeController, 'savedComic']).use(middleware.silentAuth())
-router.get('/search', [HomeController, 'search'])
-router.get('/admin', [DashboardAdminsController, 'index'])
+router.get('/search', [HomeController, 'search']).use(middleware.silentAuth())
+router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage').use(middleware.isAdmin())
 
 // Auth
 router.group(() => {
@@ -68,7 +68,7 @@ router
     router.get('/:slug/create', [EpisodesController, 'create'])
     router.get('/edit/:slug', [EpisodesController, 'edit']).use(middleware.auth())
     router.post('/:slug/store', [EpisodesController, 'store'])
-    router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show'])
+    router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show']).use(middleware.silentAuth())
     router.put('/update/:slug', [EpisodesController, 'update']).use(middleware.auth())
     router.delete('/delete/:slug', [EpisodesController, 'destroy']).use(middleware.auth())
   })
@@ -127,21 +127,14 @@ router.post('/create', [PurchasesController, 'buyEpisode']).use(middleware.auth(
 router
   .group(() => {
     router.post('/create', [TransactionsController, 'createTransaction']).use(middleware.auth())
-    router.post('/webhook', [TransactionsController, 'handleWebhook'])
-    router.get('/status/:orderId', [TransactionsController, 'checkStatus']).use(middleware.auth())
+    router.post('/webhook', [TransactionsController, 'handleWebhook']) // public
+    router.get('/status/:orderId', [TransactionsController, 'checkStatus']) // public - untuk polling
     router.get('/history', [TransactionsController, 'getHistory']).use(middleware.auth())
   })
   .prefix('/transaction')
 
-// Midtrans test
-// router.post('/midtrans/test', async ({ response }) => {
-//   const service = new (await import('#services/midtrans_service')).MidtransService()
-//
-//   const token = await service.createTransaction({
-//     id: 1,
-//     name: 'Packet 1',
-//     price: 15000,
-//   })
-//
-//   return response.json({ token })
-// })
+
+router.post('/episodes/:id/buy', [PurchasesController, 'buyEpisode']).use(middleware.auth())
+router.get('/episodes/:id/check', [PurchasesController, 'checkPurchase']).use(middleware.auth())
+router.get('/purchases', [PurchasesController, 'index']).use(middleware.auth())
+router.get('/wallet', [PurchasesController, 'getWallet']).use(middleware.auth())

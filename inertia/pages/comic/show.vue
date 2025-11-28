@@ -37,7 +37,7 @@ const userRating = ref(props.comic.userRating || 0)
 
 const toggleFavorite = async () => {
   try {
-    await router.post(`/comic/favorite/${props.comic.slug}`, {}, { preserveScroll: true })
+    router.post(`/comic/favorite/${props.comic.slug}`, {}, { preserveScroll: true })
     isFavorited.value = !isFavorited.value
   } catch (error) {
     console.error('Gagal ubah favorite:', error)
@@ -47,7 +47,7 @@ const toggleFavorite = async () => {
 const rateComic = async (value: number) => {
   userRating.value = value
   try {
-    await router.post(`/comic/rating/${props.comic.slug}`, { rating_value: value }, { preserveScroll: true })
+    router.post(`/comic/rating/${props.comic.slug}`, { rating_value: value }, { preserveScroll: true })
   } catch (error) {
     console.error('Gagal simpan rating:', error)
   }

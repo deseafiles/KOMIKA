@@ -61,7 +61,7 @@ export class MidtransService {
   }
 
   /**
-   * Cek status transaksi ke Midtrans (server side verification)
+   * Cek status transaksi ke Midtrans
    */
   async checkTransactionStatus(orderId: string) {
     try {

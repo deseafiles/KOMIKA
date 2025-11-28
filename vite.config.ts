@@ -18,7 +18,7 @@ export default defineConfig({
   },
 
   server: {
-    allowedHosts: ['']
+    allowedHosts: ['miguel-unsedentary-unintendedly.ngrok-free.dev'],
   },
 
   build: {

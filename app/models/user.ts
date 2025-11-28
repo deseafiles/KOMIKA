@@ -114,11 +114,13 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @afterCreate()
   static async createUserWallet(user: User) {
+   if(user.isAdmin === false) {
     await UserWalet.firstOrCreate({
       userId: user.id,
       coinBalance: 0,
       totalSpent: 0,
       totalPurchased: 0,
-    })
+      })
+    }
   }
 }

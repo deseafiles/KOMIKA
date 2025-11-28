@@ -39,7 +39,6 @@ const props = defineProps<{
 
 const page = usePage<SharedProps>()
 const user =page.props.user
-console.log(user)
 </script>
 
 <template>
