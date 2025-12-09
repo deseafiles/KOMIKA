@@ -23,6 +23,10 @@ const goBack = () => {
     <!-- Judul -->
     <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Tambah Paket Koin</h1>
 
+      <p v-if="form.errors.name" class="text-red-600 text-sm mt-1">
+        {{ form.errors.name }}
+      </p>
+
     <!-- Form Card -->
     <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg">
       <form @submit.prevent="submit" class="space-y-5">

@@ -4,7 +4,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 export default class HomeController {
 async index({ inertia, request }: HttpContext) {
     const page = request.input('page', 1)
-    const perPage = 10
+    const perPage = 1
 
     const allComic = await Comic
       .query()

@@ -43,7 +43,7 @@ export default class GenresController {
   }
 
   async update({ params, request, response }: HttpContext) {
-    const genre = await Genre.findOrFail(params.id)
+    const genre = await Genre.findByOrFail('id', params.id)
 
     const { name } = await request.validateUsing(createGenreValidator)
 

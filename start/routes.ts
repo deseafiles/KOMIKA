@@ -117,7 +117,7 @@ router
     router.get('/create', [GenresController, 'create'])
     router.post('/store', [GenresController, 'store'])
     router.get('/edit/:id', [GenresController, 'edit'])
-    router.put('/update', [GenresController, 'update'])
+    router.put('/update/:id', [GenresController, 'update'])
     router.delete('/destroy/:id', [GenresController, 'destroy'])
   })
   .prefix('/admin/genres')
