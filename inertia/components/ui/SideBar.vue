@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
+import { Icon } from '@iconify/vue'
 
 const navItems = [
-  { name: 'Dashboard', href: '/admin/', icon: '🏠' },
-  { name: 'Manajemen Koin', href: '/admin/coin/index', icon: '🪙' },
-  { name: 'Genre Komik', href: '/admin/genres/index', icon: '📚' },
-  { name: 'Laporan Pengguna', href: '/admin/users', icon: '🚫' },
-  {name: 'Laporan Komik', href: '/admin/comics', icon:'✏️'}
+  { name: 'Dashboard', href: '/admin/', icon: 'mingcute:home-3-fill' },
+  { name: 'Manajemen Koin', href: '/admin/coin/index', icon: 'mdi:coin' },
+  { name: 'Genre Komik', href: '/admin/genres/index', icon: 'mdi:book-open-page-variant' },
+  { name: 'Laporan Pengguna', href: '/admin/users', icon: 'mingcute:report-fill' },
+  { name: 'Laporan Komik', href: '/admin/comics', icon: 'mdi:pencil' }
 ]
-
 const logout = () => {
   router.post('/logout', {}, {
     onSuccess: () => {
@@ -32,13 +32,13 @@ const logout = () => {
 
       <nav class="flex-1 p-4 space-y-2">
         <Link
-          v-for="(item, i) in navItems"
-          :key="i"
+          v-for="item in navItems"
+          :key="item.name"
           :href="item.href"
           class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition"
           :class="{ 'bg-indigo-100 text-indigo-700 font-medium': $page.url===(item.href) }"
         >
-          <span class="text-lg">{{ item.icon }}</span>
+          <Icon :icon="item.icon" class="w-8 h-8"/>
           <span>{{ item.name }}</span>
         </Link>
       </nav>

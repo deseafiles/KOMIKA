@@ -9,7 +9,6 @@ interface Genre {
 
 const page = usePage()
 
-// Ambil data genre dari props inertia dengan aman
 const genres = computed<Genre[]>(() => {
   return Array.isArray(page.props.genres) ? (page.props.genres as Genre[]) : []
 })
@@ -17,7 +16,6 @@ const genres = computed<Genre[]>(() => {
 const loading = ref(false)
 const errorMessage = ref('')
 
-// Form data utama
 const form = useForm({
   title: '',
   description: '',

@@ -6,7 +6,6 @@
 
 /* Plugins */
 @plugin "@tailwindcss/forms";
-/*@plugin "@iconify/tailwind4";*/
 
 * {
   margin: 0;

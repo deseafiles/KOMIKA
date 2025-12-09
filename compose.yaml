@@ -1,0 +1,8 @@
+service:
+  db: postgres:18
+  environment:
+    POSTGRES_USER:
+    POSTGRES_DB:
+
+  web:
+

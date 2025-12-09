@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import SideBar from '~/components/ui/SideBar.vue';
-import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { ref } from 'vue'
+import { useForm } from '@inertiajs/vue3'
+import SideBar from '~/components/ui/SideBar.vue'
 
 const props = defineProps<{
   comics: {
-    id: number,
-    title: string,
-    description: string,
+    id: number
+    title: string
+    slug: string
+    description: string
     isDeleted: boolean
-  }
+  }[]
 }>()
 
-console.log(props)
 const isOpen = ref<number | null>(null)
 
 const toggleDropdown = (id: number) => {
@@ -25,28 +25,27 @@ const closeDropdown = () => {
 
 const form = useForm({})
 
-const banUser = async (id: number) => {
+const banComic = async (slug: string) => {
   try {
-    form.post(`/users/${id}/ban`)
-    const user = props.users.find(u => u.id === id)
-    if (user) user.isBanned = true
+    form.post(`/comics/${slug}/ban`)
+    const comic = props.comics.find(c => c.slug === slug)
+    if (comic) comic.isDeleted = true
     closeDropdown()
   } catch (error) {
     console.error(error)
   }
 }
 
-const unbanUser = async (id: number) => {
+const unbanComic = async (slug: string) => {
   try {
-    form.post(`/users/${id}/unban`)
-    const user = props.users.find(u => u.id === id)
-    if (user) user.isBanned = false
+    form.post(`/comics/${slug}/unban`)
+    const comic = props.comics.find(c => c.slug === slug)
+    if (comic) comic.isDeleted = false
     closeDropdown()
   } catch (error) {
     console.error(error)
   }
 }
-
 </script>
 
 <template>
@@ -62,25 +61,23 @@ const unbanUser = async (id: number) => {
             <th class="p-3">Title</th>
             <th class="p-3">Description</th>
             <th class="p-3">Status Komik</th>
-            <th class="p-3">Status Ban</th>
             <th class="p-3 text-right">Aksi</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr v-for="comic in props.comics" :key="comics.id" class="border-b hover:bg-gray-50 transition">
+          <tr v-for="comic in props.comics" :key="comic.id" class="border-b hover:bg-gray-50 transition">
             <td class="p-3">{{ comic.id }}</td>
-            <td class="p-3 font-medium text-gray-800">{{ user.username }}</td>
-            <td class="p-3 text-gray-700">{{ user.email }}</td>
+            <td class="p-3 font-medium text-gray-800">{{ comic.title }}</td>
+            <td class="p-3 text-gray-700">{{ comic.description }}</td>
             <td class="p-3">
-              <span :class="user.isBanned ? 'text-red-600 font-medium' : 'text-green-600 font-medium'">
-                {{ user.isBanned ? 'Banned' : 'Active' }}
+              <span :class="comic.isDeleted ? 'text-red-600 font-medium' : 'text-green-600 font-medium'">
+                {{ comic.isDeleted ? 'Banned' : 'Active' }}
               </span>
             </td>
             <td class="p-3 text-right relative">
-
               <!-- Trigger Dropdown -->
-              <button @click="toggleDropdown(user.id)" class="flex justify-center items-center w-8 h-8 rounded-lg border bg-white hover:bg-gray-100">
+              <button @click="toggleDropdown(comic.id)" class="flex justify-center items-center w-8 h-8 rounded-lg border bg-white hover:bg-gray-100">
                 <svg class="w-4 h-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="1"/>
                   <circle cx="12" cy="5" r="1"/>
@@ -89,24 +86,23 @@ const unbanUser = async (id: number) => {
               </button>
 
               <!-- Dropdown -->
-              <div v-if="isOpen === user.id" class="absolute right-0 mt-2 w-40 bg-white shadow-lg border border-gray-200 rounded-lg p-1 z-50">
+              <div v-if="isOpen === comic.id" class="absolute right-0 mt-2 w-44 bg-white shadow-lg border border-gray-200 rounded-lg p-1 z-50">
                 <button
-                  v-if="!user.isBanned"
-                  @click="banUser(user.id)"
+                  v-if="!comic.isDeleted"
+                  @click="banComic(comic.slug)"
                   class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
-                  Ban User
+                  Laporkan / Ban Komik
                 </button>
 
                 <button
                   v-else
-                  @click="unbanUser(user.id)"
+                  @click="unbanComic(comic.slug)"
                   class="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50"
                 >
-                  Unban User
+                  Pulihkan Komik
                 </button>
               </div>
-
             </td>
           </tr>
         </tbody>

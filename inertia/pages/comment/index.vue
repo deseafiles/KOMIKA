@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {SharedProps} from '@adonisjs/inertia/types'
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import { router, useForm, usePage, Link, Head } from '@inertiajs/vue3'
+import type { SharedProps } from '@adonisjs/inertia/types'
 
 interface Episode {
   id: number
@@ -19,29 +19,30 @@ interface Comment {
   id: number
   content: string
   createdAt: string
-  user: User
+  user?: User | null
   isLike: boolean
-  episodes: Episode[]
+  likeCount?: number
+  episodes?: Episode[]
 }
 
 const props = defineProps<{
   episode: Episode,
-  comment: Comment[]
+  comment?: Comment[]
 }>()
+
+const comments = props.comment || []
 
 const form = useForm({
   content: '',
   episodeId: props.episode.id,
-  parentCommentId: null
+  parentCommentId: null,
 })
+
 const likes = ref<Record<number, boolean>>({})
-
-// Inisialisasi likes
-props.comment.forEach((c) => {
-  likes.value[c.id] = c.isLike
+comments.forEach(c => {
+  if (c?.id != null) likes.value[c.id] = !!c.isLike
 })
 
-// Ambil user login
 const page = usePage<SharedProps>()
 const user = page.props.user
 
@@ -50,7 +51,7 @@ const likeComment = async (commentId: number) => {
     router.post(`/comment/like/${commentId}`)
     likes.value[commentId] = !likes.value[commentId]
   } catch (error) {
-    console.log('Gagal menyukai komentar', error)
+    console.error('Gagal menyukai komentar', error)
   }
 }
 
@@ -58,7 +59,7 @@ const deleteComment = async (commentId: number) => {
   try {
     router.delete(`/comment/${commentId}/destroy`)
   } catch (error) {
-    console.log('Gagal menghapus komentar', error)
+    console.error('Gagal menghapus komentar', error)
   }
 }
 
@@ -70,10 +71,11 @@ const submit = (e: Event) => {
     },
     onError: (errors) => {
       console.error(errors)
-    }
+    },
   })
 }
 
+// Tombol kembali
 const goBack = () => {
   window.history.back()
 }
@@ -88,16 +90,13 @@ const goBack = () => {
       class="sticky top-0 z-10 bg-white/80 dark:bg-black/70 backdrop-blur-md border-b border-gray-200 dark:border-neutral-800 py-4 shadow-sm"
     >
       <div class="max-w-3xl mx-auto flex items-center justify-between px-4">
-        <!-- Tombol Back -->
         <button
           @click="goBack"
-          class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium
-                 hover:text-gray-900 dark:hover:text-white transition"
+          class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium hover:text-gray-900 dark:hover:text-white transition"
         >
           ← Kembali
         </button>
 
-        <!-- Judul -->
         <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-200 truncate">
           Komentar: {{ props.episode.title }}
         </h1>
@@ -107,35 +106,34 @@ const goBack = () => {
     </header>
 
     <div class="max-w-3xl mx-auto px-4 py-10">
+      <!-- Tidak ada komentar -->
       <div
-        v-if="!props.comment || props.comment.length === 0"
+        v-if="comments.length === 0"
         class="text-center text-gray-500 py-16"
       >
         <p class="text-lg font-semibold">Belum ada komentar.</p>
       </div>
 
-      <!-- LIST KOMENTAR -->
+      <!-- Daftar komentar -->
       <div v-else class="space-y-4">
         <div
-          v-for="c in props.comment"
+          v-for="c in comments"
           :key="c.id"
           class="bg-white shadow rounded-lg p-5"
         >
-          <!-- USER INFO -->
+          <!-- User info -->
           <div class="flex items-start justify-between mb-3">
             <div>
-              <p class="font-semibold text-gray-800">{{ c.user.username }}</p>
-              <p class="text-xs text-gray-500">
-                {{ new Date(c.createdAt).toLocaleString() }}
-              </p>
+              <p class="font-semibold text-gray-800">{{ c.user?.username || 'Deleted User' }}</p>
+              <p class="text-xs text-gray-500">{{ new Date(c.createdAt).toLocaleString() }}</p>
               <p class="text-gray-700 whitespace-pre-line">{{ c.content }}</p>
             </div>
 
-            <!-- Tombol aksi: Like & Hapus -->
+            <!-- Like & Hapus -->
             <div class="flex flex-col items-end gap-2">
               <!-- Hapus hanya untuk user pembuat -->
               <button
-                v-if="user.id === c.user.id"
+                v-if="user?.id && c.user?.id && user.id === c.user.id"
                 @click="deleteComment(c.id)"
                 class="text-red-500 text-sm hover:underline"
               >
@@ -154,8 +152,8 @@ const goBack = () => {
             </div>
           </div>
 
-          <!-- RELATED EPISODE -->
-          <div v-if="c.episodes.length" class="mt-4 text-sm text-gray-600">
+          <!-- Related episode -->
+          <div v-if="c.episodes?.length" class="mt-4 text-sm text-gray-600">
             <span class="font-medium">Episode:</span>
             <span v-for="(ep, index) in c.episodes" :key="ep.id">
               <Link
@@ -170,7 +168,7 @@ const goBack = () => {
         </div>
       </div>
 
-      <!-- FORM KOMENTAR -->
+      <!-- Form komentar -->
       <div class="mt-10">
         <form
           class="max-w-2xl bg-white rounded-lg border p-4 mx-auto"

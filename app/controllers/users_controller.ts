@@ -1,5 +1,7 @@
 import CoinPackage from '#models/coin_package'
+import Creator from '#models/creator'
 import User from '#models/user'
+import {profileValidator} from '#validators/auth'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class UsersController {
@@ -41,20 +43,32 @@ export default class UsersController {
   /**
    * Edit individual record
    */
-  async edit({ params }: HttpContext) {}
+// Edit page
+async edit({ params, inertia, auth }: HttpContext) {
+  const user = await User.query()
+                         .where('username', params.username)
+                         .firstOrFail()
+  return inertia.render('profile/edit', { creator: user })
+}
 
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ request, auth, response }: HttpContext) {
-    const user = auth.user!
-    const payload = request.only(['username', 'password'])
+async update({ params, request, response, auth }: HttpContext) {
+  const user = auth.user!
+  const creator = await Creator.query().where('userId', user.id).firstOrFail()
 
-    await user.merge(payload).save()
+  const payload = await request.validateUsing(profileValidator)
 
-    return response.redirect().back()
+  creator.bankName = payload.bankName
+  creator.bankAccountName = payload.bankAccountName
+  creator.bankAccountNumber = payload.bankAccountNumber
 
+  await creator.save()
+
+  if (request.accepts(['json'])) {
+    return response.ok({ message: 'Data Creator berhasil diperbarui', data: creator })
   }
+
+  return response.redirect().back()
+}
 
 /**
    * Ban user (admin only)

@@ -65,4 +65,25 @@ export default class DashboardAdminsController {
 
     return inertia.render('admin/UserManagement/comics', {comics})
   }
+
+  async banComic({ params, response }: HttpContext) {
+    const comic = await Comic.query()
+                             .where('slug', params.slug)
+                             .firstOrFail()
+    comic.isDeleted = true
+    await comic.save()
+
+    return response.redirect().toRoute('/admin/comics')
+
+  }
+
+  async unBanComic({params, response}: HttpContext) {
+    const comic = await Comic.query()
+                             .where('slug', params.slug)
+                             .firstOrFail()
+    comic.isDeleted = false
+    await comic.save()
+
+    return response.redirect().toRoute('/admin/comics')
+  }
 }

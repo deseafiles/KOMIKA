@@ -2,18 +2,19 @@ import Comic from '#models/comic'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class HomeController {
-  async index({ inertia }: HttpContext) {
+async index({ inertia, request }: HttpContext) {
+    const page = request.input('page', 1)
+    const perPage = 10
+
     const allComic = await Comic
       .query()
-      .preload('comicGenres', (genreQuery) => {
-        genreQuery.select(['id', 'name'])
-      })
-      .preload('creators', (creatorQuery) => {
-        creatorQuery.preload('users')
-      })
+      .where('isDeleted', false)
+      .preload('comicGenres', q => q.select(['id', 'name']))
+      .preload('creators', q => q.preload('users'))
       .orderBy('created_at', 'desc')
+      .paginate(page, perPage)
 
-    return inertia.render('home', { allComic })
+    return inertia.render('home', { allComic: allComic.toJSON() })
   }
 
 async savedComic({ inertia, auth, response }: HttpContext) {

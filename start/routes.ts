@@ -33,8 +33,8 @@ router.get('/admin/comics', [DashboardAdminsController, 'getAllComic']).use(midd
 
 router.post('/users/:id/ban', [DashboardAdminsController, 'banUser']).use(middleware.isAdmin())
 router.post('/users/:id/unban', [DashboardAdminsController, 'unbanUser']).use(middleware.isAdmin())
-// router.post('/comics/:id/ban', [DashboardAdminsController, ''])
-// router.post('/comics/:id/unban', [DashboardAdminsController, ''])
+router.post('/comics/:slug/ban', [DashboardAdminsController, 'banComic']).use(middleware.isAdmin())
+router.post('/comics/:slug/unban', [DashboardAdminsController, 'unBanComic']).use(middleware.isAdmin())
 
 router.get('/ban-page', [HomeController, 'banPage'])
 
@@ -52,7 +52,7 @@ router
   .group(() => {
     router.get('/show', [UsersController, 'show']).use([middleware.auth(), middleware.bannedUser()])
     router.get('/edit/:username', [UsersController, 'edit']).use(middleware.auth())
-    router.put('/update/:username', [UsersController, 'update']).use(middleware.auth())
+    router.put('/update', [UsersController, 'update']).use(middleware.auth())
   })
   .prefix('/profile')
 
@@ -79,7 +79,7 @@ router
     router.get('/edit/:slug', [EpisodesController, 'edit']).use(middleware.auth())
     router.post('/:slug/store', [EpisodesController, 'store'])
     router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show']).use(middleware.silentAuth())
-    router.put('/update/:slug', [EpisodesController, 'update']).use(middleware.auth())
+    router.put('/:slug/update/:episodeSlug', [EpisodesController, 'update']).use(middleware.auth())
     router.delete('/delete/:slug', [EpisodesController, 'destroy']).use(middleware.auth())
   })
   .prefix('/episode')
@@ -116,9 +116,12 @@ router
     router.get('/index', [GenresController, 'index'])
     router.get('/create', [GenresController, 'create'])
     router.post('/store', [GenresController, 'store'])
+    router.get('/edit/:id', [GenresController, 'edit'])
+    router.put('/update', [GenresController, 'update'])
     router.delete('/destroy/:id', [GenresController, 'destroy'])
   })
   .prefix('/admin/genres')
+  .use(middleware.isAdmin())
 
 // Coin Packages
 router
@@ -131,6 +134,7 @@ router
     router.delete('/destroy/:id', [CoinPackagesController, 'destroy'])
   })
   .prefix('/admin/coin')
+  .use(middleware.isAdmin())
 
 router.post('/create', [PurchasesController, 'buyEpisode']).use(middleware.auth())
 

@@ -1,11 +1,14 @@
 <script setup lang="ts">
+  import { Icon } from '@iconify/vue';
 </script>
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
     <div class="bg-white rounded-xl shadow-xl p-6 sm:p-10 max-w-lg w-full text-center">
       <!-- Icon -->
-      <div class="text-7xl mb-4 sm:mb-6">🚫</div>
+      <div class="flex items-center justify-center mb-4 sm:mb-6">
+        <Icon icon="mdi:account-off" width="45" height="45" />
+      </div>
 
       <!-- Judul -->
       <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">
@@ -42,7 +45,3 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Bisa tambahkan style khusus di sini kalau mau */
-</style>

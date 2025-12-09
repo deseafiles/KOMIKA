@@ -2,8 +2,8 @@
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import Navbar from '~/components/ui/navbar.vue'
 import Footer from '~/components/ui/footer.vue'
-import type { SharedData, SharedProps } from '@adonisjs/inertia/types'
 import Pagination from '~/components/ui/Pagination.vue'
+import type { SharedProps } from '@adonisjs/inertia/types'
 
 interface Genre {
   id: number
@@ -32,13 +32,21 @@ interface Comic {
   creators: Creator
 }
 
-
+// ⬇️ SUDAH DIUBAH: props menerima paginate result
 const props = defineProps<{
- allComic: Comic[]
+  allComic: {
+    data: Comic[],
+    meta: {
+      current_page: number
+      last_page: number
+      total: number
+      per_page: number
+    }
+  }
 }>()
 
 const page = usePage<SharedProps>()
-const user =page.props.user
+const user = page.props.user
 </script>
 
 <template>
@@ -49,12 +57,13 @@ const user =page.props.user
     <main class="flex-grow container mx-auto px-4 py-8">
       <h1 class="text-3xl font-bold mb-6">Daftar Komik</h1>
 
+      <!-- CEK DATA PAGINASI -->
       <div
-        v-if="props.allComic.length"
+        v-if="props.allComic.data.length"
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
       >
         <div
-          v-for="comic in props.allComic"
+          v-for="comic in props.allComic.data"
           :key="comic.id"
           class="bg-white dark:bg-zinc-800 rounded-xl shadow p-4 hover:shadow-lg transition"
         >
@@ -102,9 +111,11 @@ const user =page.props.user
       <div v-else class="text-gray-500 dark:text-gray-300 text-center">
         Belum ada komik tersedia.
       </div>
+
+      <!-- PAGINATION DI DALAM MAIN (lebih rapi) -->
+      <Pagination :meta="props.allComic.meta" />
     </main>
 
-    <Pagination/>
     <footer class="mt-auto w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 mx-auto">
       <Footer />
     </footer>

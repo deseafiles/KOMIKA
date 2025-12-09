@@ -33,7 +33,7 @@ const handleThumbnailChange = (e: Event) => {
 }
 
 const submit = () => {
-  form.post(`/episode/${props.episode.slug}/update`, {
+  form.put(`/episode/${props.episode.comics.slug}/update/${props.episode.slug}`, {
     forceFormData: true,
     onSuccess: () => {
       console.log('Episode berhasil diperbarui')

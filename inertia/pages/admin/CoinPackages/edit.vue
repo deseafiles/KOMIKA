@@ -17,6 +17,10 @@ const form = useForm({
 const submit = () => {
   form.put(`/admin/coin/update/${props.coin.id}`)
 }
+
+const goBack = () => {
+  window.history.back()
+}
 </script>
 
 <template>
@@ -62,12 +66,12 @@ const submit = () => {
         </div>
 
         <div class="flex justify-end gap-2 mt-6">
-          <Link
-            href="/admin/coinpackages"
+          <button
+            @click="goBack"
             class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
           >
             Batal
-          </Link>
+          </button>
           <button
             type="submit"
             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"

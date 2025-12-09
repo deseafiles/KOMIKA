@@ -10,14 +10,13 @@ const props = defineProps<{
 
 const page = usePage<SharedProps>()
 const user = page.props.user
-const emit = defineEmits(['close'])
 
 const submit = () => {
-  router.post(`/episodes/${props.episode.id}/buy`, {}, {
-    onSuccess: () => {
-      emit('close')
-    }
-  })
+  router.post(`/episodes/${props.episode.id}/buy`)
+}
+
+const goBack = () => {
+  window.history.back()
 }
 </script>
 
@@ -26,7 +25,7 @@ const submit = () => {
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative animate-scale">
 
       <button
-        @click="emit('close')"
+        @click="goBack"
         class="absolute right-4 top-4 text-gray-500 hover:text-black text-xl"
       >
         ×

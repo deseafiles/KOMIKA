@@ -37,6 +37,29 @@ export default class GenresController {
     return response.redirect().toRoute('/admin/genres/index')
   }
 
+  async edit({ params, inertia, response }: HttpContext){
+    const genre = await Genre.findOrFail(params.id)
+    return inertia.render('admin/Genres/edit', { genre })
+  }
+
+  async update({ params, request, response }: HttpContext) {
+    const genre = await Genre.findOrFail(params.id)
+
+    const { name } = await request.validateUsing(createGenreValidator)
+
+    genre.name = name
+    await genre.save()
+
+    if (request.accepts(['json'])) {
+      return response.ok({
+        message: 'Genre updated successfully',
+        data: genre,
+      })
+    }
+
+    return response.redirect().toRoute('/admin/genres/index')
+  }
+
   async destroy({ params, request, response }: HttpContext) {
     const genre = await Genre.findOrFail(params.id)
 

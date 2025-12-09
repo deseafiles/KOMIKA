@@ -147,7 +147,9 @@ const goBack = () => {
 
       <div v-if="props.episodes.length === 0" class="text-center py-10 text-gray-500">
         Belum ada episode.
-        <Link :href="`/episode/${props.comic.slug}/create`" class="text-indigo-600 underline ml-1">
+      <Link
+        :href="`/episode/${props.comic.slug}/create`"
+        class="text-indigo-600 underline ml-1">
           Buat sekarang
         </Link>
       </div>
