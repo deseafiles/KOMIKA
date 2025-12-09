@@ -2,8 +2,6 @@
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import Navbar from '~/components/ui/navbar.vue'
 import Footer from '~/components/ui/footer.vue'
-import type { SharedData, SharedProps } from '@adonisjs/inertia/types'
-import Pagination from '~/components/ui/Pagination.vue'
 
 interface Genre {
   id: number
@@ -26,35 +24,29 @@ interface Comic {
   slug: string
   description: string
   coverUrl: string | null
-  status: string
-  updateDay: string
   comicGenres: Genre[]
   creators: Creator
 }
 
-
 const props = defineProps<{
- allComic: Comic[]
+  favoriteComic: Comic[]
 }>()
-
-const page = usePage<SharedProps>()
-const user =page.props.user
 </script>
 
 <template>
   <div class="flex flex-col min-h-screen">
-    <Head title="Home" />
+    <Head title="Library" />
     <Navbar />
 
     <main class="flex-grow container mx-auto px-4 py-8">
-      <h1 class="text-3xl font-bold mb-6">Daftar Komik</h1>
 
-      <div
-        v-if="props.allComic.length"
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-      >
+      <h1 class="text-3xl font-bold mb-6">Komik Tersimpan</h1>
+
+      <div v-if="props.favoriteComic.length"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
         <div
-          v-for="comic in props.allComic"
+          v-for="comic in props.favoriteComic"
           :key="comic.id"
           class="bg-white dark:bg-zinc-800 rounded-xl shadow p-4 hover:shadow-lg transition"
         >
@@ -64,7 +56,6 @@ const user =page.props.user
           >
             <img
               :src="comic.coverUrl || '/placeholder.png'"
-              alt="Cover"
               class="w-full h-56 object-cover rounded-md"
             />
           </Link>
@@ -89,24 +80,22 @@ const user =page.props.user
             </div>
 
             <div class="mt-2 text-xs text-gray-600 dark:text-gray-300">
-              <span>👤 {{ comic.creators?.users?.username }}</span>
+              👤 {{ comic.creators?.users?.username }}
             </div>
 
-            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              <span>Status: {{ comic.status }}</span>
-            </div>
           </div>
         </div>
       </div>
 
-      <div v-else class="text-gray-500 dark:text-gray-300 text-center">
-        Belum ada komik tersedia.
+      <div v-else class="text-gray-500 dark:text-gray-300 text-center py-10">
+        Kamu belum menyimpan komik apa pun.
       </div>
+
     </main>
 
-    <Pagination/>
     <footer class="mt-auto w-full max-w-[85rem] py-10 px-4 sm:px-6 lg:px-8 mx-auto">
       <Footer />
     </footer>
   </div>
 </template>
+

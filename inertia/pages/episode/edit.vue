@@ -3,25 +3,23 @@ import { useForm, Link } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const props = defineProps({
-  comic: {
+  episode: {
     type: Object,
     required: true
   }
 })
-
+console.log(props.episode.slug)
 const form = useForm({
-  comicId: props.comic.id,
-  title: '',
-  episodeNumber: '',
-  publishedAt: '',
-  thumbnailUrl: null,
-  coinPrice: '',
+  title: props.episode.title,
+  episodeNumber: props.episode.episodeNumber,
+  publishedAt: props.episode.publishedAt,
+  coinPrice: props.episode.coinPrice,
+  thumbnailUrl: null, // file baru jika diupload
 })
 
-// Ref untuk menyimpan preview URL
-const preview = ref<string | null>(null)
+// Preview thumbnail awal
+const preview = ref<string | null>(props.episode.thumbnailUrl || null)
 
-// Handle file change untuk thumbnail
 const handleThumbnailChange = (e: Event) => {
   const target = e.target as HTMLInputElement
   const file = target.files?.[0] || null
@@ -30,26 +28,28 @@ const handleThumbnailChange = (e: Event) => {
   if (file) {
     preview.value = URL.createObjectURL(file)
   } else {
-    preview.value = null
+    preview.value = props.episode.thumbnailUrl || null
   }
 }
 
 const submit = () => {
-  form.post(`/episode/${props.comic.slug}/store`, {
+  form.post(`/episode/${props.episode.slug}/update`, {
     forceFormData: true,
     onSuccess: () => {
-      console.log('Episode berhasil disimpan')
-      form.reset()
-      preview.value = null
+      console.log('Episode berhasil diperbarui')
     },
     onError: (errors) => console.error(errors)
   })
+}
+
+const goBack = () => {
+  window.history.back()
 }
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Tambah Episode</h1>
+    <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Edit Episode</h1>
 
     <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
       <form @submit.prevent="submit" class="space-y-5">
@@ -116,17 +116,16 @@ const submit = () => {
 
         <!-- Tombol Aksi -->
         <div class="flex justify-end gap-3 mt-6">
-          <Link
-            :href="`/episode/${props.comic.slug}/index`"
+          <button @click="goBack"
             class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
           >
             Batal
-          </Link>
+          </button>
           <button
             type="submit"
             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
           >
-            Simpan
+            Perbarui
           </button>
         </div>
 
@@ -134,3 +133,4 @@ const submit = () => {
     </div>
   </div>
 </template>
+

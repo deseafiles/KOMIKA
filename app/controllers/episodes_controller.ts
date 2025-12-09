@@ -100,53 +100,37 @@ async index({ inertia, auth, params }: HttpContext) {
   /**
    * Edit episode (creator only)
    */
-  async edit({ params, inertia, auth }: HttpContext) {
-    const creator = await Creator
-      .query()
-      .where('user_id', auth.user!.id)
-      .firstOrFail()
+async edit({ params, inertia, auth }: HttpContext) {
+  // pastikan middleware auth() aktif
+  const user = auth.user!
 
-    const episode = await Episode
-      .query()
-      .where('id', params.id)
-      .whereHas('comics', (comicQuery) =>
-        comicQuery.where('creator_id', creator.id)
-      )
-      .firstOrFail()
+  // Ambil episode langsung berdasarkan slug
+  const episode = await Episode
+    .query()
+    .where('slug', params.slug!) // slug harus ada
+    .firstOrFail()
 
-    return inertia.render('episode/edit', { episode })
-  }
+  return inertia.render('episode/edit', { episode })
+}
 
-  /**
-   * Update episode (creator only)
-   */
-  async update({ params, request, response, auth }: HttpContext) {
-    const creator = await Creator
-      .query()
-      .where('user_id', auth.user!.id)
-      .firstOrFail()
+async update({ params, request, response, auth }: HttpContext) {
+  const episode = await Episode
+    .query()
+    .where('slug', params.slug!)
+    .firstOrFail()
 
-    const episode = await Episode
-      .query()
-      .where('id', params.id)
-      .whereHas('comics', (comicQuery) =>
-        comicQuery.where('creator_id', creator.id)
-      )
-      .firstOrFail()
+  const payload = request.only([
+    'title',
+    'episodeNumber',
+    'thumbnailUrl',
+    'coinPrice',
+    'publishedAt',
+  ])
 
-    const payload = request.only([
-      'title',
-      'episodeNumber',
-      'thumbnailUrl',
-      'coinPrice',
-      'publishedAt',
-    ])
+  await episode.merge(payload).save()
 
-    await episode.merge(payload).save()
-
-    return response.redirect().back()
-  }
-
+  return response.redirect().back()
+}
   /**
    * Delete episode (creator only)
    */
@@ -158,7 +142,7 @@ async index({ inertia, auth, params }: HttpContext) {
 
     const episode = await Episode
       .query()
-      .where('id', params.id)
+      .where('slug', params.slug)
       .whereHas('comics', (comicQuery) =>
         comicQuery.where('creator_id', creator.id)
       )
@@ -202,11 +186,7 @@ async index({ inertia, auth, params }: HttpContext) {
    * Show single published episode to reader
    */
 async show({ params, inertia, auth, request }: HttpContext) {
-  // const page = request.input('page', 1)
-  // const perPage = 10
-  // console.log('page', 'perPage')
-
-  const  { page, perPage } = await request.validateUsing(paginatorEpisode)
+  const { page, perPage } = await request.validateUsing(paginatorEpisode)
 
   const episode = await Episode
     .query()
@@ -215,17 +195,17 @@ async show({ params, inertia, auth, request }: HttpContext) {
     .preload('comics', (q) => q.preload('comicGenres'))
     .firstOrFail()
 
-  const pages = await episode
-    .related('pages')
-    .query()
-    .orderBy('page_number', 'asc')
-    .paginate(page ?? 1, perPage ?? 10)
-
   const user = auth.user
 
   if (episode.isPremium) {
     if (!user) {
-      return inertia.render('episode/LockedEpisode', { episode, mustLogin: true })
+      return inertia.render('episode/show', {
+        episode: episode.toJSON(),
+        pages: [],
+        pagesMeta: {},
+        showPurchaseModal: true,
+        mustLogin: true,
+      })
     }
 
     const hasPurchased = await user
@@ -235,10 +215,15 @@ async show({ params, inertia, auth, request }: HttpContext) {
       .first()
 
     if (!hasPurchased) {
-      return inertia.render('episode/locked', { episode, purchased: false })
+      return inertia.render('episode/show', {
+        episode: episode.toJSON(),
+        pages: [],
+        pagesMeta: {},
+        showPurchaseModal: true,
+        purchased: false,
+      })
     }
   }
-
 
   if (user) {
     const read = await user
@@ -252,13 +237,19 @@ async show({ params, inertia, auth, request }: HttpContext) {
     }
   }
 
+  const pages = await episode
+    .related('pages')
+    .query()
+    .orderBy('page_number', 'asc')
+    .paginate(page ?? 1, perPage ?? 10)
+
   return inertia.render('episode/show', {
-    episode,
+    episode: episode.toJSON(),
     pages: inertia.merge(() => pages.toJSON().data),
-      pagesMeta: pages.getMeta()
+    pagesMeta: pages.getMeta(),
+    showPurchaseModal: false,
   })
 }
-
   async likeEpisode({ params, auth }: HttpContext) {
     const user = auth.user!
     const like = await user.related('userLikes').query().where('episode_id', params.id).first()

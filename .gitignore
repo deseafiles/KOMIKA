@@ -8,10 +8,13 @@ tmp
 .env.local
 .env.production.local
 .env.development.local
-
+.env.production
 # Frontend assets compiled code
 public/assets
-storage/
+storage/metadata/coverUrl/*
+storage/metadata/episode-comic/*
+storage/pages-comic/*
+tmp/uploads/*
 
 # Build tools specific
 npm-debug.log

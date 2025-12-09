@@ -6,7 +6,6 @@
 | The routes file is used for defining the HTTP routes.
 |
 */
-
 import LoginController from '#controllers/auth/login_controller'
 import RegisterController from '#controllers/auth/register_controller'
 import ComicsController from '#controllers/comics_controller'
@@ -20,11 +19,26 @@ import EpisodesController from '#controllers/episodes_controller'
 import DashboardAdminsController from '#controllers/admin/dashboard_admins_controller'
 import UsersController from '#controllers/users_controller'
 import PagesController from '#controllers/pages_controller'
-
+import TransactionsController from '#controllers/transactions_controller'
+import CommentsController from '#controllers/comments_controller'
+import PurchasesController from '#controllers/purchases_controller'
+// Home
 router.get('/', [HomeController, 'index']).as('home').use(middleware.silentAuth())
+router.get('/library', [HomeController, 'savedComic']).use(middleware.silentAuth())
+router.get('/search', [HomeController, 'search']).use(middleware.silentAuth())
+router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage').use(middleware.isAdmin())
+// router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage')
+router.get('/admin/users', [DashboardAdminsController, 'getAllUsers']).use(middleware.isAdmin())
+router.get('/admin/comics', [DashboardAdminsController, 'getAllComic']).use(middleware.isAdmin())
 
-router.get('/admin', [DashboardAdminsController, 'index'])
+router.post('/users/:id/ban', [DashboardAdminsController, 'banUser']).use(middleware.isAdmin())
+router.post('/users/:id/unban', [DashboardAdminsController, 'unbanUser']).use(middleware.isAdmin())
+router.post('/comics/:id/ban', [DashboardAdminsController, ''])
+router.post('/comics/:id/unban', [DashboardAdminsController, ''])
 
+router.get('/ban-page', [HomeController, 'banPage']).as('banPage')
+
+// Auth
 router.group(() => {
   router.get('/register', [RegisterController, 'index']).as('register.index')
   router.post('/register', [RegisterController, 'store']).as('register.store')
@@ -33,14 +47,16 @@ router.group(() => {
   router.post('/logout', [LogoutController, 'handle'])
 })
 
-router.group(() => {
-  router.get('/show', [UsersController, 'show']).use(middleware.auth())
-  router.get('/edit/:username', [UsersController, 'edit']).use(middleware.auth())
-  router.put('/update/:username', [UsersController, 'update']).use(middleware.auth())
-})
+// Profile
+router
+  .group(() => {
+    router.get('/show', [UsersController, 'show']).use(middleware.auth())
+    router.get('/edit/:username', [UsersController, 'edit']).use(middleware.auth())
+    router.put('/update/:username', [UsersController, 'update']).use(middleware.auth())
+  })
   .prefix('/profile')
 
-//done, harusnya
+// Comics
 router
   .group(() => {
     router.get('/index', [ComicsController, 'index']).use(middleware.auth())
@@ -55,33 +71,46 @@ router
   })
   .prefix('/comic')
 
-//done
-router.group(() => {
-  router.get('/:slug/index', [EpisodesController, 'index']).use(middleware.auth())
-  router.get('/:slug/create', [EpisodesController, 'create'])
-  router.get('/edit/:id', [EpisodesController, 'edit'])
-  router.post('/:slug/store', [EpisodesController, 'store'])
-  router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show'])
-  router.put('/update', [EpisodesController, 'update'])
-  router.delete('/delete/:id', [EpisodesController, 'destroy'])
-})
+// Episodes
+router
+  .group(() => {
+    router.get('/:slug/index', [EpisodesController, 'index']).use(middleware.auth())
+    router.get('/:slug/create', [EpisodesController, 'create'])
+    router.get('/edit/:slug', [EpisodesController, 'edit']).use(middleware.auth())
+    router.post('/:slug/store', [EpisodesController, 'store'])
+    router.get('/:slug/show/:episodeSlug', [EpisodesController, 'show']).use(middleware.silentAuth())
+    router.put('/update/:slug', [EpisodesController, 'update']).use(middleware.auth())
+    router.delete('/delete/:slug', [EpisodesController, 'destroy']).use(middleware.auth())
+  })
   .prefix('/episode')
 
-  router.group(() => {
+// Pages
+router
+  .group(() => {
     router.post('/:comicSlug/store/:episodeSlug', [PagesController, 'store']).use(middleware.auth())
     router.get('/:comicSlug/create/:episodeSlug', [PagesController, 'create'])
+    router.get('/:episodeId/edit', [PagesController, 'edit']).use(middleware.auth())
+    router.put('/:episodeId/update/', [PagesController, 'update']).use(middleware.auth())
     router.delete('/destroy/:id', [PagesController, 'destroy'])
   })
   .prefix('/pages')
 
+// Episode Like
 router.group(() => {
-  //router.get('/comics/episode/:id', [EpisodesController, 'listByComic'])
   router.post('/episode/like/:id', [EpisodesController, 'likeEpisode']).use(middleware.auth())
 })
-// 🌍 Public reader routes
-//Route.get('/comics/:slug/episodes', 'EpisodesController.listByComic')
-//Route.get('/episodes/:id', 'EpisodesController.showPublic')
 
+// Comments
+router
+  .group(() => {
+    router.get('/index/comic/:comicSlug/episode/:episodeSlug/', [CommentsController, 'index']).use(middleware.silentAuth())
+    router.post('/episode/:episodeSlug/store', [CommentsController, 'store']).use(middleware.auth())
+    router.delete('/:id/destroy', [CommentsController, 'destroy']).use(middleware.auth())
+    router.post('/like/:id', [CommentsController, 'likeComment']).use(middleware.auth())
+  })
+  .prefix('/comment')
+
+// Genres
 router
   .group(() => {
     router.get('/index', [GenresController, 'index'])
@@ -91,7 +120,7 @@ router
   })
   .prefix('/admin/genres')
 
-//DONE TESTING USING POSTMAN
+// Coin Packages
 router
   .group(() => {
     router.get('/index', [CoinPackagesController, 'index'])
@@ -100,20 +129,22 @@ router
     router.get('/edit/:id', [CoinPackagesController, 'edit'])
     router.put('/update/:id', [CoinPackagesController, 'update'])
     router.delete('/destroy/:id', [CoinPackagesController, 'destroy'])
-    //router.get('/show/:id', [CoinPackagesController, 'show'])//hapus show coin
   })
   .prefix('/admin/coin')
 
+router.post('/create', [PurchasesController, 'buyEpisode']).use(middleware.auth())
 
-router.post('/midtrans/test', async ({ response }) => {
-  const service = new (await import('#services/midtrans_service')).MidtransService()
-
-  const token = await service.createTransaction({
-    id: 1,
-    name: 'Packet 1',
-    price: 15000,
+router
+  .group(() => {
+    router.post('/create', [TransactionsController, 'createTransaction']).use(middleware.auth())
+    router.post('/webhook', [TransactionsController, 'handleWebhook']) // public aja
+    router.get('/status/:orderId', [TransactionsController, 'checkStatus']) //public ajaa
+    router.get('/history', [TransactionsController, 'getHistory']).use(middleware.auth())
   })
+  .prefix('/transaction')
 
-  return response.json({ token })
-})
 
+router.post('/episodes/:id/buy', [PurchasesController, 'buyEpisode']).use(middleware.auth())
+// router.get('/episodes/:id/check', [PurchasesController, 'checkPurchase']).use(middleware.auth())
+// router.get('/purchases', [PurchasesController, 'index']).use(middleware.auth())
+// router.get('/wallet', [PurchasesController, 'getWallet']).use(middleware.auth())
