@@ -1,1 +1,10 @@
+name: KOMIKA
+
+services:
+  db: postgres:18
+  env_file:
+    - .env.production
+  ports:
+    - 5433:5433
+
 

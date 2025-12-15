@@ -73,7 +73,6 @@ const getPageNumbers = () => {
       Next →
     </Link>
 
-    <!-- Info Text -->
     <span class="text-sm text-gray-600 dark:text-gray-400 ml-2">
       {{ props.meta.currentPage }} / {{ props.meta.lastPage }}
     </span>
