@@ -1,10 +1,40 @@
-name: KOMIKA
-
 services:
-  db: postgres:18
-  env_file:
-    - .env.production
-  ports:
-    - 5433:5433
+  adonis:
+    build: .
+    container_name: komika-app
+    env_file:
+      - .env.production
+    expose:
+      - "3333"
+    depends_on:
+      - postgres
+    networks:
+      - komika-network
 
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - '8080:80'
+    depends_on:
+      - adonis
+    networks:
+      - komika-network
 
+  postgres:
+    image: postgres:14-alpine
+    env_file:
+      - .env.production
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - komika-network
+
+volumes:
+  postgres_data:
+
+networks:
+  komika-network:
+    driver: bridge

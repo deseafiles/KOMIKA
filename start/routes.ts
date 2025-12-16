@@ -10,6 +10,9 @@ import LoginController from '#controllers/auth/login_controller'
 import RegisterController from '#controllers/auth/register_controller'
 import ComicsController from '#controllers/comics_controller'
 import router from '@adonisjs/core/services/router'
+import db from '@adonisjs/lucid/services/db'
+import crypto from 'node:crypto'
+import { DateTime } from 'luxon'
 import { middleware } from './kernel.js'
 import HomeController from '#controllers/home_controller'
 import LogoutController from '#controllers/auth/logout_controller'
@@ -30,6 +33,49 @@ router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage').u
 // router.get('/admin', [DashboardAdminsController, 'index']).as('AdminHomepage')
 router.get('/admin/users', [DashboardAdminsController, 'getAllUsers']).use(middleware.isAdmin())
 router.get('/admin/comics', [DashboardAdminsController, 'getAllComic']).use(middleware.isAdmin())
+
+router.get('/verify-email', async ({ request, response }) => {
+  const token = request.input('token')
+
+  if (!token) {
+    return response.badRequest('Invalid verification link')
+  }
+
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(token)
+    .digest('hex')
+
+  const record = await db
+    .from('email_verifications')
+    .where('token_text', hashedToken)
+    .first()
+
+  if (!record) {
+    return response.badRequest('Verification link invalid')
+  }
+
+  if (
+    record.expired_at &&
+    DateTime.fromJSDate(record.expired_at) < DateTime.now()
+  ) {
+    return response.badRequest('Verification link expired')
+  }
+
+  await db
+    .from('users')
+    .where('id', record.user_id)
+    .update({
+      is_verified: true,
+    })
+
+  await db
+    .from('email_verifications')
+    .where('user_id', record.user_id)
+    .delete()
+
+  return response.redirect('/login')
+})
 
 router.post('/users/:id/ban', [DashboardAdminsController, 'banUser']).use(middleware.isAdmin())
 router.post('/users/:id/unban', [DashboardAdminsController, 'unbanUser']).use(middleware.isAdmin())

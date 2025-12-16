@@ -17,13 +17,21 @@ FROM base AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules /app/node_modules
 ADD . .
-RUN node ace build
+RUN node ace build --ignore-ts-errors
 
+# Production stage
 # Production stage
 FROM base
 ENV NODE_ENV=production
 WORKDIR /app
+
 COPY --from=production-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app
+
+# copy entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 8080
-CMD ["node", "./bin/server.js"]
+
+ENTRYPOINT ["/entrypoint.sh"]

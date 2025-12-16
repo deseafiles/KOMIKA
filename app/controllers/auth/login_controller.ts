@@ -7,24 +7,51 @@ export default class LoginController {
     return inertia.render('auth/login')
   }
 
-async store({ request, response, auth, session }: HttpContext) {
-  const { username, password } = await request.validateUsing(loginValidator)
+  async store({ request, response, auth, session }: HttpContext) {
+    const { username, password } =
+      await request.validateUsing(loginValidator)
 
-  try {
-    const user = await User.verifyCredentials(username, password)
-    await auth.use('web').login(user)
+    try {
+      /**
+       * 1. Verifikasi kredensial
+       */
+      const user = await User.verifyCredentials(username, password)
 
-    if (user.isAdmin === true) {
-      return response.redirect().toRoute('AdminHomepage')
-    } else if(user.isBanned === true){
-      return response.redirect().toRoute('banPage')
-    } else {
+      /**
+       * 2. CEK EMAIL VERIFICATION (INI KUNCINYA)
+       */
+      if (!user.isVerified) {
+        session.flash('errors', {
+          email: 'Silakan verifikasi email terlebih dahulu.',
+        })
+
+        return response.redirect().toRoute('auth.verify.notice')
+      }
+
+      /**
+       * 3. Login setelah lolos verifikasi
+       */
+      await auth.use('web').login(user)
+
+      /**
+       * 4. Logic existing Anda (dipertahankan)
+       */
+      if (user.isAdmin === true) {
+        return response.redirect().toRoute('AdminHomepage')
+      }
+
+      if (user.isBanned === true) {
+        return response.redirect().toRoute('banPage')
+      }
+
       return response.redirect().toRoute('home')
-    }
 
-  } catch (error) {
-    session.flash('errors', { E_INVALID_CREDENTIALS: 'Username atau password salah.' })
-  return response.redirect().back()
+    } catch (error) {
+      session.flash('errors', {
+        E_INVALID_CREDENTIALS: 'Username atau password salah.',
+      })
+
+      return response.redirect().back()
+    }
   }
-}
 }
