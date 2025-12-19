@@ -9,34 +9,99 @@ import crypto from 'node:crypto'
 import { DateTime } from 'luxon'
 
 export default class RegisterController {
+  /**
+   * Halaman register
+   */
   async index({ inertia }: HttpContext) {
     return inertia.render('auth/register')
   }
 
+  /**
+   * Proses register
+   */
   async store({ request, response, inertia }: HttpContext) {
     const { email, username, password } =
       await request.validateUsing(registerValidator)
 
     /**
-     * Gunakan transaction agar konsisten
+     * =====================================================
+     * 1. CEK EMAIL SUDAH ADA ATAU BELUM
+     * =====================================================
+     */
+    const existingUser = await User.findBy('email', email)
+
+    if (existingUser) {
+      /**
+       * 1a. EMAIL SUDAH ADA TAPI BELUM VERIFIED
+       * → RESEND EMAIL VERIFIKASI
+       */
+      if (!existingUser.isVerified) {
+        // hapus token lama
+        await db
+          .from('email_verifications')
+          .where('user_id', existingUser.id)
+          .delete()
+
+        const rawToken = crypto.randomBytes(32).toString('hex')
+        const hashedToken = crypto
+          .createHash('sha256')
+          .update(rawToken)
+          .digest('hex')
+
+        await db.table('email_verifications').insert({
+          user_id: existingUser.id,
+          token_text: hashedToken,
+          expired_at: DateTime.now().plus({ hours: 24 }).toSQL(),
+          created_at: DateTime.now().toSQL(),
+        })
+
+        const verifyUrl =
+          `${env.get('APP_URL')}/verify-email?token=${rawToken}`
+
+        await mail.send(
+          new VerifyEmailNotification(existingUser, verifyUrl)
+        )
+
+        return inertia.render('auth/verifyNotice', {
+          email,
+          resend: true,
+        })
+      }
+
+      /**
+       * 1b. EMAIL SUDAH VERIFIED
+       * → TOLAK
+       */
+      return inertia.render('auth/register', {
+        errors: {
+          email: 'Email sudah terdaftar',
+        },
+      })
+    }
+
+    /**
+     * =====================================================
+     * 2. EMAIL BELUM ADA → BUAT USER BARU
+     * =====================================================
      */
     const trx = await db.transaction()
 
     try {
       /**
-       * Create user
+       * 2a. CREATE USER
        */
       const user = await User.create(
         {
           email,
           username,
           password,
+          isVerified: false,
         },
         { client: trx }
       )
 
       /**
-       * Generate verification token
+       * 2b. GENERATE TOKEN
        */
       const rawToken = crypto.randomBytes(32).toString('hex')
       const hashedToken = crypto
@@ -45,40 +110,39 @@ export default class RegisterController {
         .digest('hex')
 
       /**
-       * Simpan token ke tabel email_verifications
+       * 2c. SIMPAN TOKEN
        */
-      await trx
-        .insertQuery()
-        .table('email_verifications')
-        .insert({
-          user_id: user.id,
-          token_text: hashedToken,
-          expired_at: DateTime.now().plus({ hours: 24 }).toSQL(),
-          created_at: DateTime.now().toSQL(),
-        })
+      await trx.table('email_verifications').insert({
+        user_id: user.id,
+        token_text: hashedToken,
+        expired_at: DateTime.now().plus({ hours: 24 }).toSQL(),
+        created_at: DateTime.now().toSQL(),
+      })
 
       /**
-       * Build verification URL
+       * 2d. KIRIM EMAIL
        */
       const verifyUrl =
         `${env.get('APP_URL')}/verify-email?token=${rawToken}`
 
-      /**
-       * Kirim email
-       */
       await mail.send(
         new VerifyEmailNotification(user, verifyUrl)
       )
 
       await trx.commit()
 
- if (request.accepts(['json'])) {
-      return response.created({
-        message: 'User registered. Verification email sent.',
-      })
-    }
+      /**
+       * 2e. RESPONSE
+       */
+      if (request.accepts(['json'])) {
+        return response.created({
+          message: 'User registered. Verification email sent.',
+        })
+      }
 
-    return inertia.render('auth/verifyNotice')
+      return inertia.render('auth/verifyNotice', {
+        email,
+      })
     } catch (error) {
       await trx.rollback()
       console.error(error)
