@@ -5,6 +5,7 @@ import { createPagesValidator } from '#validators/page'
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import sharp from 'sharp'
+import fs from 'node:fs/promises'
 
 export default class PagesController {
   /**
@@ -35,16 +36,14 @@ async create({ inertia, params }: HttpContext) {
    */
 async store({ request, response, params }: HttpContext) {
   const episodeSlug = params.episodeSlug
-  const episode = await Episode
-    .query()
-    .where('slug', params.episodeSlug)
-    .firstOrFail()
-
   if (!episodeSlug) {
     return response.badRequest('Episode tidak ditemukan di URL')
   }
 
- // const { pageNumber } = await request.validateUsing(createPagesValidator)
+  const episode = await Episode
+    .query()
+    .where('slug', episodeSlug)
+    .firstOrFail()
 
   const lastPage = await Page.query()
     .where('episode_id', episode.id)
@@ -58,22 +57,27 @@ async store({ request, response, params }: HttpContext) {
     extnames: ['jpg', 'png', 'jpeg', 'webp'],
   })
 
-  const createdPages = []
+  const createdPages: Page[] = []
 
   for (const [index, image] of imageFiles.entries()) {
     if (!image.isValid) continue
 
-    const fileName = `${Date.now()}_${image.clientName}`
+    // sanitize filename: ganti spasi jadi underscore, hapus karakter aneh
+    const cleanName = image.clientName
+      .replace(/\s+/g, '_')
+      .replace(/[^\w.-]/g, '')
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}_${cleanName}`
 
-    const tempPath = app.makePath(`tmp/uploads/${fileName}`)
-    await image.move(app.makePath('tmp/uploads'), {
-      name: fileName,
-      overwrite: true,
-    })
+    const tempDir = app.makePath('tmp/uploads')
+    await fs.mkdir(tempDir, { recursive: true })
+    await image.move(tempDir, { name: fileName, overwrite: true })
+    const tempPath = `${tempDir}/${fileName}`
 
-    const outputPath = app.makePath(`storage/pages-comic/${fileName}`)
+    const outputDir = app.makePath('storage/pages-comic')
+    await fs.mkdir(outputDir, { recursive: true })
+    const outputPath = `${outputDir}/${fileName}`
+
     const metadata = await sharp(tempPath).metadata()
-
     const imageWidth = metadata.width
     const imageHeight = metadata.height
 
@@ -83,12 +87,17 @@ async store({ request, response, params }: HttpContext) {
       )
     }
 
-    await sharp(tempPath).resize(800, 1280, { fit: 'inside' }).toFile(outputPath)
+    await sharp(tempPath)
+      .resize(800, 1280, { fit: 'inside' })
+      .toFile(outputPath)
+
+    // hapus temp file
+    await fs.unlink(tempPath)
 
     const page = await Page.create({
       episodeId: episode.id,
       pageNumber: startNumber + index,
-      imageUrl: `/storage/pages-comic/${fileName}`,
+      imageUrl: `/uploads/pages-comic/${fileName}`,
       imageHeight,
       imageWidth,
     })
@@ -124,30 +133,59 @@ async edit({ params, inertia, auth }: HttpContext) {
     pages: pages.map(p => p.toJSON()),
   })
 }
-public async update({ params, request, response }: HttpContextContract) {
-    const pagesData = request.input('pages') || []
-    const files = request.files('pages')
 
-    for (const updateData of pagesData) {
-      const page = await Page.find(updateData.id)
-      if (!page) continue
+public async update({ request, response }: HttpContext) {
+  const pagesData = request.input('pages') || []
+  const files = request.files('pages') || []
 
-      page.pageNumber = updateData.pageNumber
+  const outputDir = app.makePath('storage/pages')
+  await fs.mkdir(outputDir, { recursive: true })
 
-      const file = files.find(f => f.clientName === updateData.fileName)
-      if (file) {
-        await file.move(Application.makePath('storage/pages'), {
-          name: `${Date.now()}-${file.clientName}`,
-          overwrite: true,
-        })
-        page.imageUrl = `/storage/pages/${file.clientName}`
+  for (const updateData of pagesData) {
+    const page = await Page.find(updateData.id)
+    if (!page) continue
+
+    page.pageNumber = updateData.pageNumber
+
+    const file = files.find(f => f.clientName === updateData.fileName)
+    if (file && file.isValid) {
+      // sanitize filename
+      const cleanName = file.clientName
+        .replace(/\s+/g, '_')
+        .replace(/[^\w.-]/g, '')
+      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}_${cleanName}`
+
+      const tempDir = app.makePath('tmp/uploads')
+      await fs.mkdir(tempDir, { recursive: true })
+
+      await file.move(tempDir, { name: fileName, overwrite: true })
+      const tempPath = `${tempDir}/${fileName}`
+
+      const metadata = await sharp(tempPath).metadata()
+      const imageWidth = metadata.width
+      const imageHeight = metadata.height
+
+      // optional: resize
+      await sharp(tempPath)
+        .resize(800, 1280, { fit: 'inside' })
+        .toFile(`${outputDir}/${fileName}`)
+
+      // hapus temp file
+      await fs.unlink(tempPath)
+
+      // hapus file lama jika ada
+      if (page.imageUrl) {
+        const oldPath = app.makePath(page.imageUrl.replace('/uploads/', 'storage/'))
+        try { await fs.unlink(oldPath) } catch {}
       }
 
-      await page.save()
+      page.imageUrl = `/uploads/pages/${fileName}`
     }
 
-    return response.redirect().back()
+    await page.save()
+  }
 
+  return response.redirect().back()
 }
 
   /**

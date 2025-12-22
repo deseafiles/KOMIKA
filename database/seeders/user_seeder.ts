@@ -5,7 +5,7 @@ export default class extends BaseSeeder {
   async run() {
     await AdminFactory.create()
 
-    //await NormalUserFactory.create()
+    // await NormalUserFactory.create()
   }
 }
 

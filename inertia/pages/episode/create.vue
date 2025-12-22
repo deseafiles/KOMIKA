@@ -9,6 +9,7 @@ const props = defineProps({
   }
 })
 
+// Inertia form
 const form = useForm({
   comicId: props.comic.id,
   title: '',
@@ -18,23 +19,32 @@ const form = useForm({
   coinPrice: '',
 })
 
-// Ref untuk menyimpan preview URL
+// Preview thumbnail
 const preview = ref<string | null>(null)
 
-// Handle file change untuk thumbnail
+// Handle file change
 const handleThumbnailChange = (e: Event) => {
   const target = e.target as HTMLInputElement
   const file = target.files?.[0] || null
   form.thumbnailUrl = file
-
-  if (file) {
-    preview.value = URL.createObjectURL(file)
-  } else {
-    preview.value = null
-  }
+  preview.value = file ? URL.createObjectURL(file) : null
 }
 
+// Submit form
 const submit = () => {
+  // Validasi lokal sebelum submit
+  form.clearErrors() // hapus error lama
+
+  if (form.episodeNumber !== null && Number(form.episodeNumber) < 1) {
+    form.setError('episodeNumber', 'Number cannot be negative')
+    return
+  }
+
+  if (form.coinPrice !== null && Number(form.coinPrice) < 0) {
+    form.setError('coinPrice', 'Coin price cannot be negative')
+    return
+  }
+
   form.post(`/episode/${props.comic.slug}/store`, {
     forceFormData: true,
     onSuccess: () => {
@@ -63,6 +73,7 @@ const submit = () => {
             placeholder="Masukkan judul episode"
             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
           />
+          <span v-if="form.errors.title" class="text-red-500 text-sm">{{ form.errors.title }}</span>
         </div>
 
         <!-- Nomor Episode -->
@@ -74,6 +85,7 @@ const submit = () => {
             placeholder="Misal: 1"
             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
           />
+          <span v-if="form.errors.episodeNumber" class="text-red-500 text-sm">{{ form.errors.episodeNumber }}</span>
         </div>
 
         <!-- Tanggal Publish -->
@@ -84,13 +96,13 @@ const submit = () => {
             type="date"
             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
           />
+          <span v-if="form.errors.publishedAt" class="text-red-500 text-sm">{{ form.errors.publishedAt }}</span>
         </div>
 
         <!-- Thumbnail Episode -->
         <div>
           <label class="block font-medium text-gray-700 mb-1">Thumbnail Episode</label>
 
-          <!-- Preview Thumbnail -->
           <div v-if="preview" class="mb-2">
             <img :src="preview" alt="Thumbnail Preview" class="w-32 h-32 object-cover rounded-lg border"/>
           </div>
@@ -101,6 +113,7 @@ const submit = () => {
             @change="handleThumbnailChange"
             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
           />
+          <span v-if="form.errors.thumbnailUrl" class="text-red-500 text-sm">{{ form.errors.thumbnailUrl }}</span>
         </div>
 
         <!-- Harga Koin -->
@@ -112,6 +125,7 @@ const submit = () => {
             placeholder="Masukkan harga koin"
             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
           />
+          <span v-if="form.errors.coinPrice" class="text-red-500 text-sm">{{ form.errors.coinPrice }}</span>
         </div>
 
         <!-- Tombol Aksi -->

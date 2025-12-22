@@ -4,8 +4,9 @@ import Comic from '#models/comic'
 import Creator from '#models/creator'
 import { DateTime } from 'luxon'
 import app from '@adonisjs/core/services/app'
-import { createEpisodeValidator, paginatorEpisode } from '#validators/episode'
+import { createEpisodeValidator, paginatorEpisode, updateEpisodeValidator } from '#validators/episode'
 import ComicPolicy from '#policies/comic_policy'
+import fs from 'node:fs/promises'
 
 export default class EpisodesController {
   /**
@@ -70,33 +71,41 @@ async create({ inertia, params }: HttpContext) {
    * @creator
    */
 async store({ request, response, params }: HttpContext) {
-    const {
-      title,
-      episodeNumber,
-      publishedAt,
-      thumbnailUrl,
-      coinPrice,
-    } = await request.validateUsing(createEpisodeValidator)
+  const {
+    title,
+    episodeNumber,
+    publishedAt,
+    coinPrice,
+  } = await request.validateUsing(createEpisodeValidator)
 
-    const comic = await Comic.findByOrFail('slug', params.slug)
+  const comic = await Comic.findByOrFail('slug', params.slug)
 
-    await thumbnailUrl.move(app.makePath('storage/metadata/episode-comic'), {
-      overwrite: true,
-    })
+  const thumbnailFile = request.file('thumbnailUrl', {
+    size: '2mb',
+    extnames: ['jpg', 'png', 'jpeg', 'webp'],
+  })
 
-    const publishedDate =  DateTime.fromISO(publishedAt)
-
-    const episode = await Episode.create({
-      title,
-      episodeNumber,
-      publishedAt: publishedDate,
-      thumbnailUrl: `/storage/metadata/episode-comic/${thumbnailUrl.fileName}`,
-      coinPrice,
-      comicId: comic.id,
-    })
-
-    return response.redirect().toPath(`/episode/${comic.slug}/index`)
+  let thumbnailPath: string | null = null
+  if (thumbnailFile && thumbnailFile.isValid) {
+    await thumbnailFile.move(app.makePath('storage/episode-comic'))
+    thumbnailPath = `/uploads/episode-comic/${thumbnailFile.fileName}`
+  } else if (thumbnailFile && !thumbnailFile.isValid) {
+    return response.badRequest({ errors: thumbnailFile.errors })
   }
+
+  const publishedDate = DateTime.fromISO(publishedAt)
+
+  const episode = await Episode.create({
+    title,
+    episodeNumber,
+    publishedAt: publishedDate,
+    thumbnailUrl: thumbnailPath || 'null',
+    coinPrice,
+    comicId: comic.id,
+  })
+
+  return response.redirect().toPath(`/episode/${comic.slug}/index`)
+}
 
   /**
    * Edit episode (creator only)
@@ -122,7 +131,7 @@ async store({ request, response, params }: HttpContext) {
    * Update episode (creator only)
    * @creator
    */
-async update({ params, request, response, auth, bouncer }: HttpContext) {
+public async update({ params, request, response, bouncer }: HttpContext) {
   const comic = await Comic.findByOrFail('slug', params.slug)
 
   const episode = await Episode
@@ -131,40 +140,62 @@ async update({ params, request, response, auth, bouncer }: HttpContext) {
     .preload('comics')
     .firstOrFail()
 
+  // Otorisasi
   try {
     await bouncer.with('ComicPolicy').authorize('edit', episode)
-  } catch (error) {
+  } catch {
     return response.forbidden('Anda tidak bisa edit episode ini')
   }
 
-const payload = request.only([
-  'title',
-  'episodeNumber',
-  'coinPrice',
-  'publishedAt',
-])
+  const payload = await request.validateUsing(updateEpisodeValidator)
 
-if (payload.publishedAt) {
-  payload.publishedAt = DateTime.fromISO(payload.publishedAt)
-}
+  // Handle publishedAt
+  if (payload.publishedAt) {
+    payload.publishedAt = DateTime.fromISO(payload.publishedAt)
+  }
 
-
-  const thumbnailUrl = request.file('thumbnailUrl', {
+  // Handle thumbnail
+  const thumbnailFile = request.file('thumbnailUrl', {
     size: '5mb',
-    extnames: ['jpg', 'png', 'jpeg', 'webp'],
+    extnames: ['jpg', 'jpeg', 'png', 'webp'],
   })
 
-  if (thumbnailUrl && thumbnailUrl.isValid) {
-    await thumbnailUrl.move(app.makePath('storage/metadata/episode-comic'), {
-      overwrite: true,
+  let thumbnailPath: string | undefined
+
+  if (thumbnailFile && thumbnailFile.isValid) {
+    // sanitize filename
+    const cleanName = thumbnailFile.clientName
+      .replace(/\s+/g, '_')
+      .replace(/[^\w.-]/g, '')
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}-${cleanName}`
+
+    await thumbnailFile.move(app.makePath('storage/episode-comic'), {
+      name: fileName,
     })
-    episode.thumbnailUrl = `/storage/metadata/episode-comic/${thumbnailUrl.fileName}`
-  }
-  else if (thumbnailUrl && !thumbnailUrl.isValid) {
-    return response.badRequest({ errors: thumbnailUrl.errors })
+
+    thumbnailPath = `/uploads/episode-comic/${fileName}`
+
+    // hapus file lama
+    if (episode.thumbnailUrl) {
+      const oldPath = app.makePath(episode.thumbnailUrl.replace('/uploads/', 'storage/'))
+      try {
+        await fs.unlink(oldPath)
+      } catch {}
+    }
+  } else if (thumbnailFile && !thumbnailFile.isValid) {
+    return response.badRequest({ errors: thumbnailFile.errors })
   }
 
-  await episode.merge(payload).save()
+  // Merge payload
+  const mergePayload: Partial<Episode> = {
+    title: payload.title,
+    episodeNumber: payload.episodeNumber,
+    coinPrice: payload.coinPrice,
+    publishedAt: payload.publishedAt,
+    ...(thumbnailPath ? { thumbnailUrl: thumbnailPath } : {}),
+  }
+
+  await episode.merge(mergePayload).save()
 
   return response.redirect().toPath(`/episode/${comic.slug}/index`)
 }

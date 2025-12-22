@@ -19,6 +19,9 @@ services:
     image: nginx:alpine
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - comics_data:/app/storage/metadata/coverUrl
+      - episodes_data:/app/storage/metadata/episode-comic
+      - pages_data:/app/storage/pages-comic
     ports:
       - "8080:80"
     depends_on:

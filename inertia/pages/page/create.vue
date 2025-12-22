@@ -9,7 +9,7 @@ const props = defineProps({
   }
 })
 
-const previews = ref<{ file: File; page: number }[]>([])
+const previews = ref<{ file: File; page: number; id?: number }[]>([])
 
 const form = useForm({
   imageUrl: [] as File[],
@@ -18,33 +18,54 @@ const form = useForm({
 
 const getPreview = (file: File) => URL.createObjectURL(file)
 
+// Upload file baru
 const handleFileUpload = (e: Event) => {
   const target = e.target as HTMLInputElement
   if (!target.files) return
 
   const files = Array.from(target.files)
 
-  previews.value = files.map((file, index) => ({
-    file,
-    page: index + 1
-  }))
+  const startIndex = previews.value.length
+  previews.value.push(
+    ...files.map((file, index) => ({
+      file,
+      page: startIndex + index + 1
+    }))
+  )
 
-  form.imageUrl = files
+  form.imageUrl = previews.value.map((p) => p.file)
 }
 
+// Update urutan halaman
 const updateOrder = () => {
   previews.value.sort((a, b) => a.page - b.page)
   form.imageUrl = previews.value.map((p) => p.file)
 }
 
+// Hapus page (local atau server)
+const removePage = (item: { file: File; page: number; id?: number }, index: number) => {
+  // Kalau page sudah tersimpan di server
+  if (item.id) {
+    router.delete(`/pages/destroy/${item.id}`, {
+      onSuccess: () => {
+        previews.value.splice(index, 1)
+      }
+    })
+  } else {
+    // Hapus file baru
+    previews.value.splice(index, 1)
+    form.imageUrl = previews.value.map((p) => p.file)
+  }
+}
+
+// Submit form
 const submit = () => {
   updateOrder()
 
   form.post(`/pages/${props.episode.comicSlug}/store/${props.episode.episodeSlug}`, {
     forceFormData: true,
+    onSuccess: () => console.log('Pages berhasil diupload'),
   })
-
-  console.log('berhasil')
 }
 </script>
 
@@ -101,6 +122,14 @@ const submit = () => {
                 @input="updateOrder"
               />
             </div>
+
+            <button
+              type="button"
+              class="mt-2 w-full text-red-600 text-sm border border-red-200 rounded px-2 py-1 hover:bg-red-50"
+              @click="removePage(item, index)"
+            >
+              Hapus
+            </button>
           </div>
         </div>
       </div>

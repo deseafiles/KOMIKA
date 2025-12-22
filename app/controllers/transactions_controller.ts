@@ -255,7 +255,7 @@ export default class TransactionsController {
 
       const transactions = await Transaction.query()
         .where('user_id', auth.user.id)
-        .preload('coinPackage')
+        .preload('coinPackages')
         .orderBy('created_at', 'desc')
 
       return response.ok({

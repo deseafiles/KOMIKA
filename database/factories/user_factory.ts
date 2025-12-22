@@ -26,6 +26,7 @@ export const NormalUserFactory = factory
       isAdmin: false,
       isBanned: false,
       isDeleted: false,
+      isVerified: true,
       lastLoginAt: DateTime.now().minus({ days: faker.number.int({ min: 1, max: 30 }) }),
     }
   })

@@ -24,8 +24,8 @@ export const creatorRegisterValidator = vine.compile(
 
 export const profileValidator = vine.compile(
   vine.object({
-    bankName: vine.string().alpha().maxLength(30),
-    bankAccountName: vine.string().alpha(),
+    bankName: vine.string().maxLength(30),
+    bankAccountName: vine.string(),
     bankAccountNumber: vine.string().regex(/^[0-9]+$/).minLength(8).maxLength(20)
   })
 )

@@ -34,4 +34,8 @@ RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080
 
+RUN mkdir -p /app/storage/covers/
+RUN mkdir -p /app/storage/episode-comic/
+RUN mkdir -p /app/storage/pages-comic/
+
 ENTRYPOINT ["/entrypoint.sh"]

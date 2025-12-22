@@ -42,5 +42,12 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   MAILGUN_API_KEY: Env.schema.string.optional(),
-  MAILGUN_DOMAIN: Env.schema.string.optional()
+  MAILGUN_DOMAIN: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the drive package
+  |----------------------------------------------------------
+  */
+  DRIVE_DISK: Env.schema.enum(['fs'] as const)
 })
