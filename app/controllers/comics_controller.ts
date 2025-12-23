@@ -91,7 +91,7 @@ public async store({ request, response, auth }: HttpContext) {
       })
     }
 
-    return response.redirect().toRoute('comics.index')
+    return response.redirect().toRoute('/comic/index')
   }
 
 //   public async showCoverImage({ response, params }: HttpContextContracR) {

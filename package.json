@@ -76,6 +76,7 @@
     "adonisjs-scheduler": "^2.6.4",
     "edge.js": "^6.2.1",
     "esbuild": "^0.27.0",
+    "imagekit": "^6.0.0",
     "lucide-vue-next": "^0.553.0",
     "luxon": "^3.7.2",
     "midtrans-client": "^1.4.3",
