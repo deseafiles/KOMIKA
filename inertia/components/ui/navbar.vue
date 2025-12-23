@@ -56,10 +56,18 @@ const logout = () => {
             <div
               v-if="isDropdownOpen"
               @click.outside="closeDropdown"
-              class="absolute right-0 mt-2 w-40 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg z-50"
+              class="absolute right-0 mt-2 w-44 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-lg z-50"
             >
               <Link href="/profile/show" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700">Lihat Profil</Link>
-              <Link href="/comic/index" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700">Komik Saya</Link>
+
+              <!-- Komik Saya / Statistik Platform -->
+              <Link
+                :href="user.isAdmin ? '/admin' : '/comic/index'"
+                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700"
+              >
+                {{ user.isAdmin ? 'Statistik Platform' : 'Komik Saya' }}
+              </Link>
+
               <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700">Logout</button>
             </div>
           </div>
@@ -86,6 +94,14 @@ const logout = () => {
 
         <template v-if="user">
           <Link href="/profile/show" class="block px-2 py-1 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Profil</Link>
+
+          <Link
+            :href="user.isAdmin ? '/admin/statistik' : '/comic/index'"
+            class="block px-2 py-1 text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded"
+          >
+            {{ user.isAdmin ? 'Statistik Platform' : 'Komik Saya' }}
+          </Link>
+
           <button @click="logout" class="w-full text-left px-2 py-1 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">Logout</button>
         </template>
 

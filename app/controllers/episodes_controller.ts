@@ -140,7 +140,6 @@ public async update({ params, request, response, bouncer }: HttpContext) {
     .preload('comics')
     .firstOrFail()
 
-  // Otorisasi
   try {
     await bouncer.with('ComicPolicy').authorize('edit', episode)
   } catch {
@@ -149,12 +148,10 @@ public async update({ params, request, response, bouncer }: HttpContext) {
 
   const payload = await request.validateUsing(updateEpisodeValidator)
 
-  // Handle publishedAt
   if (payload.publishedAt) {
     payload.publishedAt = DateTime.fromISO(payload.publishedAt)
   }
 
-  // Handle thumbnail
   const thumbnailFile = request.file('thumbnailUrl', {
     size: '5mb',
     extnames: ['jpg', 'jpeg', 'png', 'webp'],
@@ -163,7 +160,6 @@ public async update({ params, request, response, bouncer }: HttpContext) {
   let thumbnailPath: string | undefined
 
   if (thumbnailFile && thumbnailFile.isValid) {
-    // sanitize filename
     const cleanName = thumbnailFile.clientName
       .replace(/\s+/g, '_')
       .replace(/[^\w.-]/g, '')
@@ -175,7 +171,6 @@ public async update({ params, request, response, bouncer }: HttpContext) {
 
     thumbnailPath = `/uploads/episode-comic/${fileName}`
 
-    // hapus file lama
     if (episode.thumbnailUrl) {
       const oldPath = app.makePath(episode.thumbnailUrl.replace('/uploads/', 'storage/'))
       try {
@@ -186,7 +181,6 @@ public async update({ params, request, response, bouncer }: HttpContext) {
     return response.badRequest({ errors: thumbnailFile.errors })
   }
 
-  // Merge payload
   const mergePayload: Partial<Episode> = {
     title: payload.title,
     episodeNumber: payload.episodeNumber,
@@ -268,11 +262,9 @@ public async update({ params, request, response, bouncer }: HttpContext) {
 
     const user = auth.user
 
-    // Gunakan policy untuk cek akses episode (berbayar atau gratis)
     try {
       await bouncer.with('ComicPolicy').authorize('view', episode)
     } catch (error) {
-      // Jika tidak bisa akses dan episode premium
       if (episode.isPremium) {
         if (!user) {
           return inertia.render('episode/show', {
@@ -284,7 +276,6 @@ public async update({ params, request, response, bouncer }: HttpContext) {
           })
         }
 
-        // User sudah login tapi belum beli
         return inertia.render('episode/show', {
           episode: episode.toJSON(),
           pages: [],
@@ -295,7 +286,6 @@ public async update({ params, request, response, bouncer }: HttpContext) {
       }
     }
 
-    // Jika user login dan episode gratis/sudah dibeli, track read
     if (user) {
       const read = await user
         .related('userReads')
@@ -308,7 +298,6 @@ public async update({ params, request, response, bouncer }: HttpContext) {
       }
     }
 
-    // Load pages dengan pagination
     const pages = await episode
       .related('pages')
       .query()

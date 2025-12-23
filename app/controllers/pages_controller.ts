@@ -62,7 +62,6 @@ async store({ request, response, params }: HttpContext) {
   for (const [index, image] of imageFiles.entries()) {
     if (!image.isValid) continue
 
-    // sanitize filename: ganti spasi jadi underscore, hapus karakter aneh
     const cleanName = image.clientName
       .replace(/\s+/g, '_')
       .replace(/[^\w.-]/g, '')
@@ -91,7 +90,6 @@ async store({ request, response, params }: HttpContext) {
       .resize(800, 1280, { fit: 'inside' })
       .toFile(outputPath)
 
-    // hapus temp file
     await fs.unlink(tempPath)
 
     const page = await Page.create({
@@ -145,11 +143,12 @@ public async update({ request, response }: HttpContext) {
     const page = await Page.find(updateData.id)
     if (!page) continue
 
+    // Update nomor halaman
     page.pageNumber = updateData.pageNumber
 
+    // Cari file baru untuk page ini
     const file = files.find(f => f.clientName === updateData.fileName)
     if (file && file.isValid) {
-      // sanitize filename
       const cleanName = file.clientName
         .replace(/\s+/g, '_')
         .replace(/[^\w.-]/g, '')
@@ -158,28 +157,32 @@ public async update({ request, response }: HttpContext) {
       const tempDir = app.makePath('tmp/uploads')
       await fs.mkdir(tempDir, { recursive: true })
 
+      // Move file ke temp
       await file.move(tempDir, { name: fileName, overwrite: true })
       const tempPath = `${tempDir}/${fileName}`
 
+      // Ambil metadata
       const metadata = await sharp(tempPath).metadata()
       const imageWidth = metadata.width
       const imageHeight = metadata.height
 
-      // optional: resize
+      // Resize dan simpan ke storage
       await sharp(tempPath)
         .resize(800, 1280, { fit: 'inside' })
         .toFile(`${outputDir}/${fileName}`)
 
-      // hapus temp file
       await fs.unlink(tempPath)
 
-      // hapus file lama jika ada
+      // Hapus file lama jika ada
       if (page.imageUrl) {
         const oldPath = app.makePath(page.imageUrl.replace('/uploads/', 'storage/'))
         try { await fs.unlink(oldPath) } catch {}
       }
 
+      // Update URL image
       page.imageUrl = `/uploads/pages/${fileName}`
+      page.imageWidth = imageWidth
+      page.imageHeight = imageHeight
     }
 
     await page.save()

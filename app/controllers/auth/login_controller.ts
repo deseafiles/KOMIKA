@@ -7,51 +7,34 @@ export default class LoginController {
     return inertia.render('auth/login')
   }
 
-  async store({ request, response, auth, session }: HttpContext) {
-    const { username, password } =
-      await request.validateUsing(loginValidator)
+async store({ request, response, auth, session, inertia }: HttpContext) {
+    const { username, password } = await request.validateUsing(loginValidator)
 
     try {
-      /**
-       * 1. Verifikasi kredensial
-       */
+      // 1️⃣ Verifikasi kredensial
       const user = await User.verifyCredentials(username, password)
 
-      /**
-       * 2. CEK EMAIL VERIFICATION (INI KUNCINYA)
-       */
+      // 2️⃣ Cek email verified
       if (!user.isVerified) {
-        session.flash('errors', {
-          email: 'Silakan verifikasi email terlebih dahulu.',
+        return inertia.render('auth/login', {
+          errors: { email: 'Silakan verifikasi email terlebih dahulu.' },
+          old: { username }
         })
-
-        return response.redirect().toRoute('auth.verify.notice')
       }
 
-      /**
-       * 3. Login setelah lolos verifikasi
-       */
+      // 3️⃣ Login user
       await auth.use('web').login(user)
 
-      /**
-       * 4. Logic existing Anda (dipertahankan)
-       */
-      if (user.isAdmin === true) {
-        return response.redirect().toRoute('AdminHomepage')
-      }
-
-      if (user.isBanned === true) {
-        return response.redirect().toRoute('banPage')
-      }
-
+      // 4️⃣ Redirect sesuai role/status
+      if (user.isAdmin) return response.redirect().toRoute('AdminHomepage')
+      if (user.isBanned) return response.redirect().toRoute('banPage')
       return response.redirect().toRoute('home')
 
     } catch (error) {
-      session.flash('errors', {
-        E_INVALID_CREDENTIALS: 'Username atau password salah.',
+      return inertia.render('auth/login', {
+        errors: { E_INVALID_CREDENTIALS: 'Username atau password salah.' },
+        old: { username }
       })
-
-      return response.redirect().back()
     }
   }
 }

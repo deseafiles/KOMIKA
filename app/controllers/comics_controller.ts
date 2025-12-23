@@ -80,12 +80,10 @@ public async store({ request, response, auth }: HttpContext) {
       coverUrl: coverPath,
     })
 
-    // Attach genres
     if (genreIds && genreIds.length > 0) {
       await comic.related('comicGenres').attach(genreIds)
     }
 
-    // Return response
     if (request.accepts(['json'])) {
       return response.created({
         message: 'Comic created successfully',

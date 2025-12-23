@@ -8,7 +8,8 @@ const navItems = [
   { name: 'Manajemen Koin', href: '/admin/coin/index', icon: 'mdi:coin' },
   { name: 'Genre Komik', href: '/admin/genres/index', icon: 'mdi:book-open-page-variant' },
   { name: 'Laporan Pengguna', href: '/admin/users', icon: 'mingcute:report-fill' },
-  { name: 'Laporan Komik', href: '/admin/comics', icon: 'mdi:pencil' }
+  { name: 'Laporan Komik', href: '/admin/comics', icon: 'mdi:pencil' },
+  { name: 'Komika', href:'/', icon: 'mdi:account-box-multiple'}
 ]
 const logout = () => {
   router.post('/logout', {}, {
