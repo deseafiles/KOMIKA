@@ -50,7 +50,7 @@ const handleSubmit = () => {
           <input
             v-model="form.username"
             class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
-            placeholder="Masukkan username tes"
+            placeholder="Masukkan username"
           />
           <p v-if="form.errors.username" class="text-red-500 text-sm mt-1">{{ form.errors.username }}</p>
         </div>
