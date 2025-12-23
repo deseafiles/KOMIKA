@@ -57,7 +57,7 @@ export default class RegisterController {
         const verifyUrl =
           `${env.get('APP_URL')}/verify-email?token=${rawToken}`
 
-        await sendVerifyEmail(existingUser, verifyUrl)
+        await sendVerifyEmail(existingUser.email, verifyUrl)
 
         return inertia.render('auth/verifyNotice', {
           email,

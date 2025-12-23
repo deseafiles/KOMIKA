@@ -13,13 +13,6 @@ async store({ request, response, auth, session, inertia }: HttpContext) {
     try {
       const user = await User.verifyCredentials(username, password)
 
-      if (!user.isVerified) {
-        return inertia.render('auth/login', {
-          errors: { email: 'Silakan verifikasi email terlebih dahulu.' },
-          old: { username }
-        })
-      }
-
       await auth.use('web').login(user)
 
       if (user.isAdmin) return response.redirect().toRoute('AdminHomepage')
