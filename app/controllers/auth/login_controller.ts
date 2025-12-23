@@ -17,7 +17,7 @@ async store({ request, response, auth, session, inertia }: HttpContext) {
 
       if (user.isAdmin) return response.redirect().toRoute('AdminHomepage')
       if (user.isBanned) return response.redirect().toRoute('banPage')
-      return response.redirect().toPath('/')
+      return response.redirect().toPath('/login')
     } catch (error) {
       return inertia.render('auth/login', {
         errors: { E_INVALID_CREDENTIALS: 'Username atau password salah.' },
