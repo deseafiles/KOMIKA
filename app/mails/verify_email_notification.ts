@@ -1,27 +1,22 @@
-import User from '#models/user'
-import { BaseMail } from '@adonisjs/mail'
+import { Resend } from 'resend'
 import env from '#start/env'
 
-export default class VerifyEmailNotification extends BaseMail {
-  subject = 'Verify your email address'
+const resend = new Resend(env.get('RESEND_API_KEY'))
 
-  constructor(
-    private user: User,
-    private url: string
-  ) {
-    super()
-  }
+export async function sendVerifyEmail(to: string, url: string) {
+  try {
+    const result = await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to,
+      subject: 'Verify your email',
+      html: `<a href="${url}">Verify</a>`,
+    })
 
-  prepare() {
-    this.message
-      .to(this.user.email)
-      .from(
-        env.get('MAIL_FROM_ADDRESS') || "webkomika@gmail.com",
-        env.get('MAIL_FROM_NAME')
-      )
-      .htmlView('emails/verify', {
-        user: this.user,
-        url: this.url,
-      })
+    console.log('RESEND RESULT >>>', result)
+  } catch (error) {
+    console.error('RESEND ERROR >>>', error)
+    throw error
   }
 }
+
+export default sendVerifyEmail

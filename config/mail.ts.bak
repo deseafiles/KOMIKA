@@ -1,0 +1,25 @@
+import env from '#start/env'
+import { defineConfig, transports } from '@adonisjs/mail'
+
+const mailconfig = defineConfig({
+  default: 'smtp',
+
+  mailers: {
+    smtp: transports.smtp({
+      host: env.get('smtp_host'),
+      port: env.get('smtp_port'),
+      secure: false,
+      auth: {
+        type: 'login',
+        user: env.get('smtp_username'),
+        pass: env.get('smtp_password'),
+      },
+    }),
+  },
+})
+
+export default mailconfig
+
+declare module '@adonisjs/mail/types' {
+  export interface mailerslist extends infermailers<typeof mailconfig> {}
+}

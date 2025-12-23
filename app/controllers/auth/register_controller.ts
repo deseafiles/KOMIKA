@@ -1,8 +1,7 @@
-import VerifyEmailNotification from '#mails/verify_email_notification'
+import sendVerifyEmail from '#mails/verify_email_notification'
 import User from '#models/user'
 import { registerValidator } from '#validators/auth'
 import type { HttpContext } from '@adonisjs/core/http'
-import mail from '@adonisjs/mail/services/main'
 import env from '#start/env'
 import db from '@adonisjs/lucid/services/db'
 import crypto from 'node:crypto'
@@ -58,9 +57,7 @@ export default class RegisterController {
         const verifyUrl =
           `${env.get('APP_URL')}/verify-email?token=${rawToken}`
 
-        await mail.send(
-          new VerifyEmailNotification(existingUser, verifyUrl)
-        )
+        await sendVerifyEmail(existingUser, verifyUrl)
 
         return inertia.render('auth/verifyNotice', {
           email,
@@ -125,9 +122,8 @@ export default class RegisterController {
       const verifyUrl =
         `${env.get('APP_URL')}/verify-email?token=${rawToken}`
 
-      await mail.send(
-        new VerifyEmailNotification(user, verifyUrl)
-      )
+      await sendVerifyEmail(user, verifyUrl)
+
 
       await trx.commit()
 
