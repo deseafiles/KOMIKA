@@ -8,32 +8,20 @@ import crypto from 'node:crypto'
 import { DateTime } from 'luxon'
 
 export default class RegisterController {
-  /**
-   * Halaman register
-   */
+
   async index({ inertia }: HttpContext) {
     return inertia.render('auth/register')
   }
 
-  /**
-   * Proses register
-   */
+
   async store({ request, response, inertia }: HttpContext) {
     const { email, username, password } =
       await request.validateUsing(registerValidator)
 
-    /**
-     * =====================================================
-     * 1. CEK EMAIL SUDAH ADA ATAU BELUM
-     * =====================================================
-     */
+
     const existingUser = await User.findBy('email', email)
 
     if (existingUser) {
-      /**
-       * 1a. EMAIL SUDAH ADA TAPI BELUM VERIFIED
-       * → RESEND EMAIL VERIFIKASI
-       */
       if (!existingUser.isVerified) {
         // hapus token lama
         await db
@@ -56,19 +44,14 @@ export default class RegisterController {
 
         const verifyUrl =
           `${env.get('APP_URL')}/verify-email?token=${rawToken}`
+        await sendVerifyEmail(existingUser.email, verifyUrl)
 
-        await sendVerifyEmail(existingUser, verifyUrl)
 
         return inertia.render('auth/verifyNotice', {
           email,
           resend: true,
         })
       }
-
-      /**
-       * 1b. EMAIL SUDAH VERIFIED
-       * → TOLAK
-       */
       return inertia.render('auth/register', {
         errors: {
           email: 'Email sudah terdaftar',
@@ -76,17 +59,11 @@ export default class RegisterController {
       })
     }
 
-    /**
-     * =====================================================
-     * 2. EMAIL BELUM ADA → BUAT USER BARU
-     * =====================================================
-     */
+ 
     const trx = await db.transaction()
 
     try {
-      /**
-       * 2a. CREATE USER
-       */
+
       const user = await User.create(
         {
           email,
@@ -97,18 +74,14 @@ export default class RegisterController {
         { client: trx }
       )
 
-      /**
-       * 2b. GENERATE TOKEN
-       */
+
       const rawToken = crypto.randomBytes(32).toString('hex')
       const hashedToken = crypto
         .createHash('sha256')
         .update(rawToken)
         .digest('hex')
 
-      /**
-       * 2c. SIMPAN TOKEN
-       */
+
       await trx.table('email_verifications').insert({
         user_id: user.id,
         token_text: hashedToken,
@@ -116,9 +89,6 @@ export default class RegisterController {
         created_at: DateTime.now().toSQL(),
       })
 
-      /**
-       * 2d. KIRIM EMAIL
-       */
       const verifyUrl =
         `${env.get('APP_URL')}/verify-email?token=${rawToken}`
 
@@ -127,9 +97,6 @@ export default class RegisterController {
 
       await trx.commit()
 
-      /**
-       * 2e. RESPONSE
-       */
       if (request.accepts(['json'])) {
         return response.created({
           message: 'User registered. Verification email sent.',

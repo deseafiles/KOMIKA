@@ -1,0 +1,17 @@
+[33mcommit 5693a54475231d65056bed8e47763b326684c12d[m[33m ([m[1;36mHEAD -> [m[1;32mproblem[m[33m, [m[1;32mprod[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 15:15:22 2025 +0800
+
+    fix: remove env files and clean commit
+
+[33mcommit 016abbe70a8d9a2294ff38d5418efe9addb7f2e7[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 15:11:20 2025 +0800
+
+    fix
+
+[33mcommit dcd90cff2062096aa50bcb08a0a82724d99c87b5[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Mon Dec 15 14:31:20 2025 +0800
+
+    fix mailer
