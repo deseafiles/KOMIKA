@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm, usePage } from '@inertiajs/vue3'
+import { useForm, usePage, Head } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
 interface Genre {
@@ -9,15 +9,10 @@ interface Genre {
 
 const page = usePage()
 
-// Ambil data genre dari props inertia dengan aman
 const genres = computed<Genre[]>(() => {
   return Array.isArray(page.props.genres) ? (page.props.genres as Genre[]) : []
 })
 
-const loading = ref(false)
-const errorMessage = ref('')
-
-// Form data utama
 const form = useForm({
   title: '',
   description: '',
@@ -26,167 +21,155 @@ const form = useForm({
 })
 
 const preview = ref<string | null>(null)
+const errorMessage = ref('')
 
-// Handle preview cover
-function handleFileChange(e: Event) {
+const handleFileChange = (e: Event) => {
   const target = e.target as HTMLInputElement
   const file = target.files?.[0] || null
   form.coverUrl = file
-
-  if (file) {
-    preview.value = URL.createObjectURL(file)
-  } else {
-    preview.value = null
-  }
+  preview.value = file ? URL.createObjectURL(file) : null
 }
 
-// Validasi form sebelum submit
-function validate(): boolean {
+const submit = () => {
   errorMessage.value = ''
 
-  if (!form.title.trim()) {
-    errorMessage.value = 'Judul komik wajib diisi'
-    return false
+  if (!form.title || !form.description || !form.genreIds[0]) {
+    errorMessage.value = 'Lengkapi semua data wajib'
+    return
   }
-
-  if (!form.description.trim()) {
-    errorMessage.value = 'Deskripsi komik wajib diisi'
-    return false
-  }
-
-  if (!form.genreIds[0]) {
-    errorMessage.value = 'Pilih minimal 1 genre'
-    return false
-  }
-
-  return true
-}
-
-// Submit ke server
-function submit() {
-  if (!validate()) return
-
-  loading.value = true
 
   form.post('/comic/store', {
     forceFormData: true,
     onSuccess: () => {
       form.reset()
       preview.value = null
-      loading.value = false
-      errorMessage.value = ''
     },
-    onError: (errors) => {
-      console.error(errors)
-      loading.value = false
+    onError: () => {
       errorMessage.value = 'Gagal membuat komik'
-    },
+    }
   })
 }
+
+const goBack = () => {
+  window.history.back()
+}
+
 </script>
-
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-white dark:bg-black p-4">
-    <Head title="Publish"/>
-    <div
-      class="flex w-full max-w-4xl rounded-2xl bg-purple-100 dark:bg-purple-900 shadow-xl overflow-hidden flex-col md:flex-row"
-    >
-      <!-- Kiri: Cover Komik -->
-      <div
-        class="flex flex-col items-center justify-start bg-purple-200 dark:bg-purple-800 p-6 w-full md:w-1/3"
-      >
-        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-white">Cover Komik</label>
-        <input
-          type="file"
-          accept="image/*"
-          @change="handleFileChange"
-          class="block w-full cursor-pointer rounded-lg border border-gray-300 text-sm text-gray-900 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-gray-400"
-        />
-        <!-- Preview Gambar -->
-        <img
-          v-if="preview"
-          :src="preview"
-          alt="Preview Gambar"
-          class="mt-4 rounded-lg object-cover w-full max-h-60"
-        />
-      </div>
+  <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+    <Head title="Publish Komik" />
 
-      <!-- Kanan: Form -->
-      <div class="flex flex-col p-8 w-full md:w-2/3 gap-4">
-        <!-- Error Message -->
+    <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+      Publish Komik
+    </h1>
+
+    <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
+      <form @submit.prevent="submit" class="space-y-5">
+
+        <!-- Error -->
         <div
           v-if="errorMessage"
-          class="p-3 rounded-lg bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 text-sm"
+          class="p-3 rounded-lg bg-red-100 text-red-700 text-sm"
         >
           {{ errorMessage }}
         </div>
 
-        <!-- Judul Komik -->
+        <!-- Judul -->
         <div>
-          <label class="text-sm font-medium text-gray-700 dark:text-white">Judul Komik</label>
+          <label class="block font-medium text-gray-700 mb-1">
+            Judul Komik
+          </label>
           <input
             v-model="form.title"
             type="text"
-            class="w-full rounded-xl bg-white px-5 py-1.5 focus:ring-2 focus:ring-purple-500 focus:outline-none dark:bg-neutral-800 dark:text-white"
-            placeholder="Masukkan Judul Komik"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-indigo-200"
+            placeholder="Masukkan judul komik"
           />
-          <p v-if="form.errors.title" class="text-red-500 text-xs mt-1">
-            {{ form.errors.title }}
-          </p>
         </div>
 
-        <!-- Deskripsi Komik -->
+        <!-- Deskripsi -->
         <div>
-          <label class="text-sm font-medium text-gray-700 dark:text-white">Deskripsi Komik</label>
+          <label class="block font-medium text-gray-700 mb-1">
+            Deskripsi Komik
+          </label>
           <textarea
             v-model="form.description"
-            class="w-full rounded-xl bg-white px-5 py-3 focus:ring-2 focus:ring-purple-500 focus:outline-none dark:bg-neutral-800 dark:text-white"
-            placeholder="Masukkan Deskripsi Komik"
             rows="4"
-          ></textarea>
-          <p v-if="form.errors.description" class="text-red-500 text-xs mt-1">
-            {{ form.errors.description }}
-          </p>
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-indigo-200"
+            placeholder="Masukkan deskripsi komik"
+          />
         </div>
 
-        <!-- Genre Komik -->
+        <!-- Genre -->
         <div>
-          <label class="text-sm font-medium text-gray-700 dark:text-white">Genre Komik</label>
-          <div class="flex w-full gap-4">
+          <label class="block font-medium text-gray-700 mb-1">
+            Genre Komik
+          </label>
+          <div class="flex gap-3">
             <select
               v-model="form.genreIds[0]"
-              class="w-1/2 rounded-xl bg-white px-5 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none dark:bg-neutral-800 dark:text-white"
+              class="w-1/2 rounded-lg border border-gray-300 px-4 py-2"
             >
-              <option value="">Pilih Genre 1</option>
-              <option v-for="genre in genres" :key="genre.id" :value="genre.id">
-                {{ genre.name }}
+              <option value="">Genre 1</option>
+              <option v-for="g in genres" :key="g.id" :value="g.id">
+                {{ g.name }}
               </option>
             </select>
 
             <select
               v-model="form.genreIds[1]"
-              class="w-1/2 rounded-xl bg-white px-5 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none dark:bg-neutral-800 dark:text-white"
+              class="w-1/2 rounded-lg border border-gray-300 px-4 py-2"
             >
-              <option value="">Pilih Genre 2</option>
-              <option v-for="genre in genres" :key="genre.id" :value="genre.id">
-                {{ genre.name }}
+              <option value="">Genre 2</option>
+              <option v-for="g in genres" :key="g.id" :value="g.id">
+                {{ g.name }}
               </option>
             </select>
           </div>
-          <p v-if="form.errors.genreIds" class="text-red-500 text-xs mt-1">
-            {{ form.errors.genreIds }}
-          </p>
         </div>
 
-        <!-- Tombol Submit -->
-        <button
-          @click="submit"
-          :disabled="loading || form.processing"
-          class="mt-4 rounded-2xl bg-purple-700 px-5 py-2 text-white transition-all hover:bg-purple-800 disabled:bg-purple-400 disabled:cursor-not-allowed"
-        >
-          {{ loading || form.processing ? 'Mengirim...' : 'Kirim Komik' }}
-        </button>
-      </div>
+        <!-- Cover -->
+        <div>
+          <label class="block font-medium text-gray-700 mb-1">
+            Cover Komik
+          </label>
+
+          <div v-if="preview" class="mb-2">
+            <img
+              :src="preview"
+              class="w-32 h-40 object-cover rounded-lg border"
+            />
+          </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            @change="handleFileChange"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2"
+          />
+        </div>
+
+        <!-- Tombol -->
+        <div class="flex justify-end gap-3 pt-4">
+          <button
+            type="button"
+            @click="goBack"
+            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+          >
+            Batal
+          </button>
+
+          <button
+            type="submit"
+            :disabled="form.processing"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+          >
+            Simpan
+          </button>
+        </div>
+
+      </form>
     </div>
   </div>
 </template>
+

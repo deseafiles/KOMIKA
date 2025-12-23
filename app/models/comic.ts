@@ -64,6 +64,7 @@ export default class Comic extends BaseModel {
 
   @manyToMany(() => User, {
     pivotTable: 'comic_ratings',
+    pivotColumns: ['rating_value'],
   })
   declare comicRatings: ManyToMany<typeof User>
 

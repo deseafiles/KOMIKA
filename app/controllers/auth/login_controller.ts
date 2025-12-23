@@ -7,17 +7,34 @@ export default class LoginController {
     return inertia.render('auth/login')
   }
 
-  async store({ request, response, auth }: HttpContext) {
+async store({ request, response, auth, session, inertia }: HttpContext) {
     const { username, password } = await request.validateUsing(loginValidator)
 
     try {
+      // 1️⃣ Verifikasi kredensial
       const user = await User.verifyCredentials(username, password)
 
+      // 2️⃣ Cek email verified
+      if (!user.isVerified) {
+        return inertia.render('auth/login', {
+          errors: { email: 'Silakan verifikasi email terlebih dahulu.' },
+          old: { username }
+        })
+      }
+
+      // 3️⃣ Login user
       await auth.use('web').login(user)
+
+      // 4️⃣ Redirect sesuai role/status
+      if (user.isAdmin) return response.redirect().toRoute('AdminHomepage')
+      if (user.isBanned) return response.redirect().toRoute('banPage')
       return response.redirect().toRoute('home')
+
     } catch (error) {
-      console.error(error)
-      return response.send('User Gagal Login')
+      return inertia.render('auth/login', {
+        errors: { E_INVALID_CREDENTIALS: 'Username atau password salah.' },
+        old: { username }
+      })
     }
   }
 }

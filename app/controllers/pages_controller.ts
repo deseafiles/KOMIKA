@@ -5,6 +5,7 @@ import { createPagesValidator } from '#validators/page'
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
 import sharp from 'sharp'
+import fs from 'node:fs/promises'
 
 export default class PagesController {
   /**
@@ -24,7 +25,7 @@ async create({ inertia, params }: HttpContext) {
       slug: episode.slug,
       episodeNumber: episode.episodeNumber,
       comicId: episode.comicId,
-      comicSlug: episode.comics.slug, // <- FIX
+      comicSlug: episode.comics.slug,
       episodeSlug: episode.slug,
     }
   })
@@ -35,16 +36,14 @@ async create({ inertia, params }: HttpContext) {
    */
 async store({ request, response, params }: HttpContext) {
   const episodeSlug = params.episodeSlug
-  const episode = await Episode
-    .query()
-    .where('slug', params.episodeSlug)
-    .firstOrFail()
-
   if (!episodeSlug) {
     return response.badRequest('Episode tidak ditemukan di URL')
   }
 
- // const { pageNumber } = await request.validateUsing(createPagesValidator)
+  const episode = await Episode
+    .query()
+    .where('slug', episodeSlug)
+    .firstOrFail()
 
   const lastPage = await Page.query()
     .where('episode_id', episode.id)
@@ -58,22 +57,26 @@ async store({ request, response, params }: HttpContext) {
     extnames: ['jpg', 'png', 'jpeg', 'webp'],
   })
 
-  const createdPages = []
+  const createdPages: Page[] = []
 
   for (const [index, image] of imageFiles.entries()) {
     if (!image.isValid) continue
 
-    const fileName = `${Date.now()}_${image.clientName}`
+    const cleanName = image.clientName
+      .replace(/\s+/g, '_')
+      .replace(/[^\w.-]/g, '')
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}_${cleanName}`
 
-    const tempPath = app.makePath(`tmp/uploads/${fileName}`)
-    await image.move(app.makePath('tmp/uploads'), {
-      name: fileName,
-      overwrite: true,
-    })
+    const tempDir = app.makePath('tmp/uploads')
+    await fs.mkdir(tempDir, { recursive: true })
+    await image.move(tempDir, { name: fileName, overwrite: true })
+    const tempPath = `${tempDir}/${fileName}`
 
-    const outputPath = app.makePath(`storage/pages-comic/${fileName}`)
+    const outputDir = app.makePath('storage/pages-comic')
+    await fs.mkdir(outputDir, { recursive: true })
+    const outputPath = `${outputDir}/${fileName}`
+
     const metadata = await sharp(tempPath).metadata()
-
     const imageWidth = metadata.width
     const imageHeight = metadata.height
 
@@ -83,12 +86,16 @@ async store({ request, response, params }: HttpContext) {
       )
     }
 
-    await sharp(tempPath).resize(800, 1280, { fit: 'inside' }).toFile(outputPath)
+    await sharp(tempPath)
+      .resize(800, 1280, { fit: 'inside' })
+      .toFile(outputPath)
+
+    await fs.unlink(tempPath)
 
     const page = await Page.create({
       episodeId: episode.id,
       pageNumber: startNumber + index,
-      imageUrl: `/storage/pages-comic/${fileName}`,
+      imageUrl: `/uploads/pages-comic/${fileName}`,
       imageHeight,
       imageWidth,
     })
@@ -105,29 +112,84 @@ async store({ request, response, params }: HttpContext) {
   /**
    * Edit individual record
    */
-  async edit({ params, inertia, auth }: HttpContext) {
-    const creator = await Creator.query().where('user_id', auth.user!.id).firstOrFail()
+async edit({ params, inertia, auth }: HttpContext) {
+  const user = auth.user!
+  const creator = await Creator.query().where('user_id', user.id).firstOrFail()
 
-    const pages = await Page.query().where('episode_id', params.id).preload('episodes', (episodeQuery) => {
-      episodeQuery.where('creator_id', creator.id)
+  const episode = await Episode.findOrFail(params.episodeId)
+
+  const pages = await Page.query()
+    .where('episode_id', episode.id)
+    .preload('episodes', (q) => {
+      q.preload('comics', (c) => {
+        c.where('creator_id', creator.id)
+      })
     })
-    .firstOrFail()
 
-    return inertia.render('pages/edit',  { pages })
+  return inertia.render('page/edit', {
+    episode: episode.toJSON(),
+    pages: pages.map(p => p.toJSON()),
+  })
+}
+
+public async update({ request, response }: HttpContext) {
+  const pagesData = request.input('pages') || []
+  const files = request.files('pages') || []
+
+  const outputDir = app.makePath('storage/pages')
+  await fs.mkdir(outputDir, { recursive: true })
+
+  for (const updateData of pagesData) {
+    const page = await Page.find(updateData.id)
+    if (!page) continue
+
+    // Update nomor halaman
+    page.pageNumber = updateData.pageNumber
+
+    // Cari file baru untuk page ini
+    const file = files.find(f => f.clientName === updateData.fileName)
+    if (file && file.isValid) {
+      const cleanName = file.clientName
+        .replace(/\s+/g, '_')
+        .replace(/[^\w.-]/g, '')
+      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}_${cleanName}`
+
+      const tempDir = app.makePath('tmp/uploads')
+      await fs.mkdir(tempDir, { recursive: true })
+
+      // Move file ke temp
+      await file.move(tempDir, { name: fileName, overwrite: true })
+      const tempPath = `${tempDir}/${fileName}`
+
+      // Ambil metadata
+      const metadata = await sharp(tempPath).metadata()
+      const imageWidth = metadata.width
+      const imageHeight = metadata.height
+
+      // Resize dan simpan ke storage
+      await sharp(tempPath)
+        .resize(800, 1280, { fit: 'inside' })
+        .toFile(`${outputDir}/${fileName}`)
+
+      await fs.unlink(tempPath)
+
+      // Hapus file lama jika ada
+      if (page.imageUrl) {
+        const oldPath = app.makePath(page.imageUrl.replace('/uploads/', 'storage/'))
+        try { await fs.unlink(oldPath) } catch {}
+      }
+
+      // Update URL image
+      page.imageUrl = `/uploads/pages/${fileName}`
+      page.imageWidth = imageWidth
+      page.imageHeight = imageHeight
+    }
+
+    await page.save()
   }
 
-  /**
-   * Handle form submission for the edit action
-   */
-  async update({ params, request, response }: HttpContext) {
-    const page = await Page.findOrFail(params.id)
-
-    const payload = request.only(['pageNumber', 'imageUrl'])
-
-    await page.merge(payload).save()
-
-    return response.redirect().back()
-  }
+  return response.redirect().back()
+}
 
   /**
    * Delete record

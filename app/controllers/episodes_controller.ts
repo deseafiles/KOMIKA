@@ -4,7 +4,9 @@ import Comic from '#models/comic'
 import Creator from '#models/creator'
 import { DateTime } from 'luxon'
 import app from '@adonisjs/core/services/app'
-import { createEpisodeValidator, paginatorEpisode } from '#validators/episode'
+import { createEpisodeValidator, paginatorEpisode, updateEpisodeValidator } from '#validators/episode'
+import ComicPolicy from '#policies/comic_policy'
+import fs from 'node:fs/promises'
 
 export default class EpisodesController {
   /**
@@ -17,46 +19,46 @@ export default class EpisodesController {
    * Display all episodes belonging to creator
    * @creator
   */
-async index({ inertia, auth, params }: HttpContext) {
-  // Ambil slug dari URL
-  const { slug } = params
+  async index({ inertia, auth, params }: HttpContext) {
+    // Ambil slug dari URL
+    const { slug } = params
 
-  // Ambil komik berdasarkan slug + milik creator yang sedang login
-  const creator = await Creator
-    .query()
-    .where('user_id', auth.user!.id)
-    .firstOrFail()
+    // Ambil komik berdasarkan slug + milik creator yang sedang login
+    const creator = await Creator
+      .query()
+      .where('user_id', auth.user!.id)
+      .firstOrFail()
 
-  const comic = await Comic
-    .query()
-    .where('slug', slug)
-    .where('creator_id', creator.id)
-    .preload('episodes', (q) => q.orderBy('episode_number', 'asc'))
-    .firstOrFail()
+    const comic = await Comic
+      .query()
+      .where('slug', slug)
+      .where('creator_id', creator.id)
+      .preload('episodes', (q) => q.orderBy('episode_number', 'asc'))
+      .firstOrFail()
 
-  return inertia.render('episode/index', {
-    comic: {
-      id: comic.id,
-      title: comic.title,
-      slug: comic.slug,
-    },
-    episodes: comic.episodes.map((ep) => ({
-      id: ep.id,
-      title: ep.title,
-      slug: ep.slug,
-      episodeNumber: ep.episodeNumber,
-      publishedAt: ep.publishedAt,
-      isPublished: ep.isPublished,
-      coinPrice: ep.coinPrice,
-    })),
-  })
-}
+    return inertia.render('episode/index', {
+      comic: {
+        id: comic.id,
+        title: comic.title,
+        slug: comic.slug,
+      },
+      episodes: comic.episodes.map((ep) => ({
+        id: ep.id,
+        title: ep.title,
+        slug: ep.slug,
+        episodeNumber: ep.episodeNumber,
+        publishedAt: ep.publishedAt,
+        isPublished: ep.isPublished,
+        coinPrice: ep.coinPrice,
+      })),
+    })
+  }
 
   /**
    * Show form to create new episode
    * @creator
    */
-  async create({ inertia, params }: HttpContext) {
+async create({ inertia, params }: HttpContext) {
     const comic = await Comic
                         .query()
                         .where('slug', params.slug)
@@ -68,101 +70,147 @@ async index({ inertia, auth, params }: HttpContext) {
    * Store new episode
    * @creator
    */
-  async store({ request, response, params }: HttpContext) {
-    const {
-      title,
-      episodeNumber,
-      publishedAt,
-      thumbnailUrl,
-      coinPrice,
-    } = await request.validateUsing(createEpisodeValidator)
+async store({ request, response, params }: HttpContext) {
+  const {
+    title,
+    episodeNumber,
+    publishedAt,
+    coinPrice,
+  } = await request.validateUsing(createEpisodeValidator)
 
-    const comic = await Comic.findByOrFail('slug', params.slug)
+  const comic = await Comic.findByOrFail('slug', params.slug)
 
-    await thumbnailUrl.move(app.makePath('storage/metadata/episode-comic'), {
-      overwrite: true,
-    })
+  const thumbnailFile = request.file('thumbnailUrl', {
+    size: '2mb',
+    extnames: ['jpg', 'png', 'jpeg', 'webp'],
+  })
 
-    const publishedDate =  DateTime.fromISO(publishedAt)
-
-    const episode = await Episode.create({
-      title,
-      episodeNumber,
-      publishedAt: publishedDate,
-      thumbnailUrl: `/storage/metadata/episode-comic/${thumbnailUrl.fileName}`,
-      coinPrice,
-      comicId: comic.id,
-    })
-
-    return response.redirect().toPath(`/episode/${comic.slug}/index`)
+  let thumbnailPath: string | null = null
+  if (thumbnailFile && thumbnailFile.isValid) {
+    await thumbnailFile.move(app.makePath('storage/episode-comic'))
+    thumbnailPath = `/uploads/episode-comic/${thumbnailFile.fileName}`
+  } else if (thumbnailFile && !thumbnailFile.isValid) {
+    return response.badRequest({ errors: thumbnailFile.errors })
   }
+
+  const publishedDate = DateTime.fromISO(publishedAt)
+
+  const episode = await Episode.create({
+    title,
+    episodeNumber,
+    publishedAt: publishedDate,
+    thumbnailUrl: thumbnailPath || 'null',
+    coinPrice,
+    comicId: comic.id,
+  })
+
+  return response.redirect().toPath(`/episode/${comic.slug}/index`)
+}
 
   /**
    * Edit episode (creator only)
+   * @creator
    */
-  async edit({ params, inertia, auth }: HttpContext) {
-    const creator = await Creator
-      .query()
-      .where('user_id', auth.user!.id)
-      .firstOrFail()
-
+  async edit({ params, inertia, auth, bouncer, response }: HttpContext) {
     const episode = await Episode
       .query()
-      .where('id', params.id)
-      .whereHas('comics', (comicQuery) =>
-        comicQuery.where('creator_id', creator.id)
-      )
+      .where('slug', params.slug!)
+      .preload('comics')
       .firstOrFail()
+
+    try {
+      await bouncer.with('ComicPolicy').authorize('edit', episode)
+    } catch (error) {
+      return response.forbidden('Anda tidak bisa edit episode ini')
+    }
 
     return inertia.render('episode/edit', { episode })
   }
 
   /**
    * Update episode (creator only)
+   * @creator
    */
-  async update({ params, request, response, auth }: HttpContext) {
-    const creator = await Creator
-      .query()
-      .where('user_id', auth.user!.id)
-      .firstOrFail()
+public async update({ params, request, response, bouncer }: HttpContext) {
+  const comic = await Comic.findByOrFail('slug', params.slug)
 
-    const episode = await Episode
-      .query()
-      .where('id', params.id)
-      .whereHas('comics', (comicQuery) =>
-        comicQuery.where('creator_id', creator.id)
-      )
-      .firstOrFail()
+  const episode = await Episode
+    .query()
+    .where('slug', params.episodeSlug!)
+    .preload('comics')
+    .firstOrFail()
 
-    const payload = request.only([
-      'title',
-      'episodeNumber',
-      'thumbnailUrl',
-      'coinPrice',
-      'publishedAt',
-    ])
-
-    await episode.merge(payload).save()
-
-    return response.redirect().back()
+  try {
+    await bouncer.with('ComicPolicy').authorize('edit', episode)
+  } catch {
+    return response.forbidden('Anda tidak bisa edit episode ini')
   }
+
+  const payload = await request.validateUsing(updateEpisodeValidator)
+
+  if (payload.publishedAt) {
+    payload.publishedAt = DateTime.fromISO(payload.publishedAt)
+  }
+
+  const thumbnailFile = request.file('thumbnailUrl', {
+    size: '5mb',
+    extnames: ['jpg', 'jpeg', 'png', 'webp'],
+  })
+
+  let thumbnailPath: string | undefined
+
+  if (thumbnailFile && thumbnailFile.isValid) {
+    const cleanName = thumbnailFile.clientName
+      .replace(/\s+/g, '_')
+      .replace(/[^\w.-]/g, '')
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}-${cleanName}`
+
+    await thumbnailFile.move(app.makePath('storage/episode-comic'), {
+      name: fileName,
+    })
+
+    thumbnailPath = `/uploads/episode-comic/${fileName}`
+
+    if (episode.thumbnailUrl) {
+      const oldPath = app.makePath(episode.thumbnailUrl.replace('/uploads/', 'storage/'))
+      try {
+        await fs.unlink(oldPath)
+      } catch {}
+    }
+  } else if (thumbnailFile && !thumbnailFile.isValid) {
+    return response.badRequest({ errors: thumbnailFile.errors })
+  }
+
+  const mergePayload: Partial<Episode> = {
+    title: payload.title,
+    episodeNumber: payload.episodeNumber,
+    coinPrice: payload.coinPrice,
+    publishedAt: payload.publishedAt,
+    ...(thumbnailPath ? { thumbnailUrl: thumbnailPath } : {}),
+  }
+
+  await episode.merge(mergePayload).save()
+
+  return response.redirect().toPath(`/episode/${comic.slug}/index`)
+}
 
   /**
    * Delete episode (creator only)
+   * @creator
    */
-  async destroy({ params, response, auth }: HttpContext) {
-    const creator = await Creator
-      .query()
-      .where('user_id', auth.user!.id)
-      .firstOrFail()
-
+  async destroy({ params, response, auth, bouncer }: HttpContext) {
     const episode = await Episode
       .query()
-      .where('id', params.id)
-      .whereHas('comics', (comicQuery) =>
-        comicQuery.where('creator_id', creator.id)
-      )
+      .where('slug', params.slug)
+      .preload('comics')
       .firstOrFail()
+
+    // Gunakan policy untuk cek apakah user pembuat komik
+    try {
+      await bouncer.with('ComicPolicy').authorize('delete', episode)
+    } catch (error) {
+      return response.forbidden('Anda tidak bisa delete episode ini')
+    }
 
     await episode.delete()
 
@@ -171,14 +219,14 @@ async index({ inertia, auth, params }: HttpContext) {
 
   /**
    * =============================
-   *READER SECTION
+   * READER SECTION
    * =============================
    */
 
   /**
    * List all published episodes for a specific comic
    * (used in public reader view)
-
+   */
   async listByComic({ params, inertia }: HttpContext) {
     const comic = await Comic
       .query()
@@ -189,7 +237,7 @@ async index({ inertia, auth, params }: HttpContext) {
     const episodes = await Episode
       .query()
       .where('comic_id', comic.id)
-      .where('isPublished', true) //ini pengecekannya kalau published at udah di tanggalnya
+      .where('isPublished', true)
       .orderBy('episode_number', 'asc')
       .preload('pages', (pagesQuery) => {
         pagesQuery.orderBy('page_number', 'asc')
@@ -200,74 +248,88 @@ async index({ inertia, auth, params }: HttpContext) {
 
   /**
    * Show single published episode to reader
+   * Gunakan policy untuk akses kontrol
    */
-async show({ params, inertia, auth, request }: HttpContext) {
-  // const page = request.input('page', 1)
-  // const perPage = 10
-  // console.log('page', 'perPage')
+  async show({ params, inertia, auth, request, bouncer }: HttpContext) {
+    const { page, perPage } = await request.validateUsing(paginatorEpisode)
 
-  const  { page, perPage } = await request.validateUsing(paginatorEpisode)
-
-  const episode = await Episode
-    .query()
-    .where('slug', params.episodeSlug)
-    .where('is_published', true)
-    .preload('comics', (q) => q.preload('comicGenres'))
-    .firstOrFail()
-
-  const pages = await episode
-    .related('pages')
-    .query()
-    .orderBy('page_number', 'asc')
-    .paginate(page ?? 1, perPage ?? 10)
-
-  const user = auth.user
-
-  if (episode.isPremium) {
-    if (!user) {
-      return inertia.render('episode/LockedEpisode', { episode, mustLogin: true })
-    }
-
-    const hasPurchased = await user
-      .related('purchases')
+    const episode = await Episode
       .query()
-      .where('episode_id', episode.id)
-      .first()
+      .where('slug', params.episodeSlug)
+      .where('is_published', true)
+      .preload('comics', (q) => q.preload('comicGenres').preload('creators'))
+      .firstOrFail()
 
-    if (!hasPurchased) {
-      return inertia.render('episode/locked', { episode, purchased: false })
+    const user = auth.user
+
+    try {
+      await bouncer.with('ComicPolicy').authorize('view', episode)
+    } catch (error) {
+      if (episode.isPremium) {
+        if (!user) {
+          return inertia.render('episode/show', {
+            episode: episode.toJSON(),
+            pages: [],
+            pagesMeta: {},
+            showPurchaseModal: true,
+            mustLogin: true,
+          })
+        }
+
+        return inertia.render('episode/show', {
+          episode: episode.toJSON(),
+          pages: [],
+          pagesMeta: {},
+          showPurchaseModal: true,
+          purchased: false,
+        })
+      }
     }
+
+    if (user) {
+      const read = await user
+        .related('userReads')
+        .query()
+        .where('episode_id', episode.id)
+        .first()
+
+      if (!read) {
+        await user.related('userReads').attach([episode.id])
+      }
+    }
+
+    const pages = await episode
+      .related('pages')
+      .query()
+      .orderBy('page_number', 'asc')
+      .paginate(page ?? 1, perPage ?? 10)
+
+    return inertia.render('episode/show', {
+      episode: episode.toJSON(),
+      pages: inertia.merge(() => pages.toJSON().data),
+      pagesMeta: pages.getMeta(),
+      showPurchaseModal: false,
+    })
   }
 
-
-  if (user) {
-    const read = await user
-      .related('userReads')
-      .query()
-      .where('episode_id', episode.id)
-      .first()
-
-    if (!read) {
-      await user.related('userReads').attach([episode.id])
-    }
-  }
-
-  return inertia.render('episode/show', {
-    episode,
-    pages: inertia.merge(() => pages.toJSON().data),
-      pagesMeta: pages.getMeta()
-  })
-}
-
-  async likeEpisode({ params, auth }: HttpContext) {
+  /**
+   * Like episode
+   */
+  async likeEpisode({ params, auth, response }: HttpContext) {
     const user = auth.user!
-    const like = await user.related('userLikes').query().where('episode_id', params.id).first()
 
-    if(like) {
+    const like = await user
+      .related('userLikes')
+      .query()
+      .where('episode_id', params.id)
+      .first()
+
+    if (like) {
       await user.related('userLikes').detach([params.id])
     } else {
       await user.related('userLikes').attach([params.id])
     }
-  }
 
+    return response.redirect().back()
+  }
 }

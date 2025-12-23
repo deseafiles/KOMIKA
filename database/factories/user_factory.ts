@@ -5,12 +5,13 @@ import { DateTime } from 'luxon'
 export const AdminFactory = factory
   .define(User, async ({ faker }) => {
     return {
-      email: 'admin@komika.com',
+      email: 'webkomik@gmail.com',
       username: 'Admin',
-      password: 'Admin123',
+      password: 'Admin webcomic',
       isAdmin: true,
       isBanned: false,
       isDeleted: false,
+      isVerified: true,
       lastLoginAt: DateTime.now().minus({ days: faker.number.int({ min: 1, max: 30 }) }),
     }
   })
@@ -25,6 +26,7 @@ export const NormalUserFactory = factory
       isAdmin: false,
       isBanned: false,
       isDeleted: false,
+      isVerified: true,
       lastLoginAt: DateTime.now().minus({ days: faker.number.int({ min: 1, max: 30 }) }),
     }
   })

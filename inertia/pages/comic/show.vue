@@ -1,65 +1,83 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 
-interface Genre {
-  id: number
-  name: string
-}
+const props = defineProps<{ comic: any }>()
 
-interface Episode {
-  id: number
-  title: string
-  slug: string
-  episodeNumber: number
-  publishedAt: string
-  thumbnailUrl: string
-  coinPrice: number
-}
-
-interface Comic {
-  id: number
-  slug: string
-  title: string
-  description?: string
-  coverUrl?: string
-  status: string
-  comicGenres: Genre[]
-  episodes: Episode[]
-  isFavorited?: boolean
-  userRating?: number
-}
-
-const props = defineProps<{ comic: Comic }>()
-
+// LOCAL STATE (INI KUNCI)
 const isFavorited = ref(!!props.comic.isFavorited)
-const userRating = ref(props.comic.userRating || 0)
+const userRating = ref(props.comic.userRating ?? 0)
 
-const toggleFavorite = async () => {
-  try {
-    await router.post(`/comic/favorite/${props.comic.slug}`, {}, { preserveScroll: true })
-    isFavorited.value = !isFavorited.value
-  } catch (error) {
-    console.error('Gagal ubah favorite:', error)
+// sync kalau page reload
+watch(
+  () => props.comic.isFavorited,
+  (val) => {
+    isFavorited.value = !!val
   }
+)
+
+watch(
+  () => props.comic.userRating,
+  (val) => {
+    userRating.value = val ?? 0
+  }
+)
+onMounted(() => {
+  // Re-validate rating dari server saat component mount
+  if (props.comic.userRating !== undefined && props.comic.userRating !== null) {
+    userRating.value = props.comic.userRating
+  }
+})
+
+const toggleFavorite = () => {
+  // update UI LANGSUNG
+  isFavorited.value = !isFavorited.value
+
+  router.post(
+    `/comic/favorite/${props.comic.slug}`,
+    {},
+    {
+      preserveScroll: true,
+      preserveState: true,
+    }
+  )
 }
 
-const rateComic = async (value: number) => {
+const rateComic = (value: number) => {
   userRating.value = value
-  try {
-    await router.post(`/comic/rating/${props.comic.slug}`, { rating_value: value }, { preserveScroll: true })
-  } catch (error) {
-    console.error('Gagal simpan rating:', error)
-  }
+
+  router.post(
+    `/comic/rating/${props.comic.slug}`,
+    { rating_value: value },
+    {
+      preserveScroll: true,
+      preserveState: true,
+    }
+  )
 }
 
 const readEpisode = (episodeSlug: string) => {
   router.get(`/episode/${props.comic.slug}/show/${episodeSlug}`)
 }
+
+const backPage = () => {
+  router.get('/')
+}
 </script>
 
 <template>
   <div class="flex flex-col min-h-screen justify-center items-center py-8 px-4">
+
+    <!-- Tombol Back -->
+    <div class="w-full max-w-2xl mb-4">
+      <button
+        @click="backPage"
+        class="px-4 py-2 bg-gray-300 text-gray-800 font-medium rounded-lg hover:bg-gray-400 transition flex items-center gap-2"
+      >
+        ← Kembali
+      </button>
+    </div>
+
     <!-- Cover -->
     <img
       :src="comic.coverUrl || '/placeholder.png'"
@@ -156,5 +174,6 @@ const readEpisode = (episodeSlug: string) => {
         </div>
       </div>
     </div>
+
   </div>
 </template>

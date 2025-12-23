@@ -34,4 +34,56 @@ export default class DashboardAdminsController {
       totalRevenue,
     })
   }
+
+  async getAllUsers({ inertia }: HttpContext) {
+    const users = await User.all()
+
+    return inertia.render('admin/UserManagement/users', {users})
+  }
+
+  async banUser({ params, response }: HttpContext) {
+    const user = await User.findOrFail(params.id)
+    user.isBanned = true
+    await user.save()
+
+    return response.ok({ message: 'User has been banned' })
+  }
+
+  /**
+   * Unban user (admin only)
+   */
+  async unbanUser({ params, response }: HttpContext) {
+    const user = await User.findOrFail(params.id)
+    user.isBanned = false
+    await user.save()
+
+    return response.ok({ message: 'User has been unbanned' })
+  }
+
+  async getAllComic({ inertia }: HttpContext) {
+    const comics = await Comic.all()
+
+    return inertia.render('admin/UserManagement/comics', {comics})
+  }
+
+  async banComic({ params, response }: HttpContext) {
+    const comic = await Comic.query()
+                             .where('slug', params.slug)
+                             .firstOrFail()
+    comic.isDeleted = true
+    await comic.save()
+
+    return response.redirect().toRoute('/admin/comics')
+
+  }
+
+  async unBanComic({params, response}: HttpContext) {
+    const comic = await Comic.query()
+                             .where('slug', params.slug)
+                             .firstOrFail()
+    comic.isDeleted = false
+    await comic.save()
+
+    return response.redirect().toRoute('/admin/comics')
+  }
 }

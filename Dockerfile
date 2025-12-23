@@ -1,11 +1,41 @@
-FROM node:24-alpine
+FROM node:22.16.0-alpine3.22 AS base
 
-COPY . /app
+# All deps stage
+FROM base AS deps
+WORKDIR /app
+ADD package.json package-lock.json ./
+RUN npm ci
 
+# Production only deps stage
+FROM base AS production-deps
+WORKDIR /app
+ADD package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# Build stage
+FROM base AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules /app/node_modules
+ADD . .
+RUN node ace build --ignore-ts-errors
+
+# Production stage
+# Production stage
+FROM base
+ENV NODE_ENV=production
 WORKDIR /app
 
-RUN npm i
+COPY --from=production-deps /app/node_modules /app/node_modules
+COPY --from=build /app/build /app
 
-EXPOSE 3333
+# copy entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-CMD ["node", "ace", "serve", "--watch"]
+EXPOSE 8080
+
+RUN mkdir -p /app/storage/covers/
+RUN mkdir -p /app/storage/episode-comic/
+RUN mkdir -p /app/storage/pages-comic/
+
+ENTRYPOINT ["/entrypoint.sh"]

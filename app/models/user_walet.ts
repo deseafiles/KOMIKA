@@ -19,6 +19,9 @@ export default class UserWalet extends BaseModel {
   @column()
   declare totalPurchased: number
 
+  @column()
+  declare totalMoneySpent: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

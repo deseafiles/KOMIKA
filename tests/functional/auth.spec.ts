@@ -2,6 +2,7 @@ import { test } from '@japa/runner'
 import mail from '@adonisjs/mail/services/main'
 import VerifyEmailNotification from '#mails/verify_email_notification'
 import db from '@adonisjs/lucid/services/db'
+import User from '#models/user'
 
 test.group('Users | register', (group) => {
   group.setup(async () => {
@@ -12,20 +13,44 @@ test.group('Users | register', (group) => {
     await db.rollbackGlobalTransaction()
   })
 
-  test('create a new user account', async ({ client, route }) => {
+  test('create a new user account and send verification email', async ({
+    client,
+    route,
+    assert,
+  }) => {
+    /**
+     * Arrange
+     */
     const userData = {
       email: 'test@example.com',
       password: 'password123',
       username: 'Test User',
     }
 
-    /**
-     * Aktifkan mode fake mail
-     */
     const { mails } = mail.fake()
 
-    await client.post(route('register.store')).form(userData)
+    /**
+     * Act
+     */
+    const response = await client
+      .post(route('register.store'))
+      .form(userData)
 
+    /**
+     * Assert HTTP
+     */
+    response.assertStatus(201)
+
+    /**
+     * Assert user created
+     */
+    const user = await User.findBy('email', userData.email)
+    assert.exists(user)
+    // assert.isNull(user!.emailVerifiedAt)
+    //
+    /**
+     * Assert email sent
+     */
     mails.assertSent(VerifyEmailNotification, ({ message }) => {
       return (
         message.hasTo(userData.email) &&

@@ -5,6 +5,9 @@ import { CreatorService } from '#services/creator_service'
 import { createComicValidator } from '#validators/comic'
 import type { HttpContext } from '@adonisjs/core/http'
 import app from '@adonisjs/core/services/app'
+import db from '@adonisjs/lucid/services/db'
+import fs from 'node:fs/promises'
+import Drive from '@adonisjs/drive/services/main'
 
 export default class ComicsController {
   /**
@@ -44,25 +47,32 @@ async create({ inertia }: HttpContext) {
    * Handle form submission for the create action
    * @creator
    */
-  async store({ request, response, auth }: HttpContext) {
-    const { title, description, genreIds } = await request.validateUsing(createComicValidator)
+public async store({ request, response, auth }: HttpContext) {
+    const { title, description, genreIds } = await request.validateUsing(
+      createComicValidator
+    )
 
-    //buat pengecekan creator udah ada atau engga, kalo engga buat creator baru, kalo udah ada langsung buat komiknya aja
-    const coverUrl = request.file('coverUrl', {
-      size: '5mb',
+    let coverPath: string | null = null
+    const cover = request.file('coverUrl', {
+      size: '2mb',
       extnames: ['jpg', 'png', 'jpeg', 'webp'],
     })
 
-    let coverPath: string | null = null
-    if (coverUrl && coverUrl.isValid) {
-      await coverUrl.move(app.makePath('storage/metadata/coverUrl'))
-      coverPath = `/storage/metadata/coverUrl/${coverUrl.fileName}`
-    } else if (coverUrl && !coverUrl.isValid) {
-      return response.badRequest({ errors: coverUrl.errors })
+    if (cover) {
+      if (!cover.isValid) {
+        return response.badRequest({ errors: cover.errors })
+      }
+
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${cover.extname}`
+
+      await cover.move(app.makePath('storage/covers'), {
+        name: fileName,
+      })
+
+      coverPath = `/uploads/covers/${fileName}`
     }
 
     const creator = await CreatorService.createCreatorIfNotExist(auth.user!)
-
     const comic = await Comic.create({
       creatorId: creator.id,
       title,
@@ -75,42 +85,54 @@ async create({ inertia }: HttpContext) {
     }
 
     if (request.accepts(['json'])) {
-      return response.ok({
+      return response.created({
         message: 'Comic created successfully',
         data: comic,
-        genreIds
       })
     }
 
-    return response.redirect().toRoute('/comic/index')
+    return response.redirect().toRoute('comics.index')
   }
 
-  async showCoverImage({ response, params }: HttpContext) {
-    return response.download(app.makePath('storage/coverUrl', params.fileName))
-  }
+//   public async showCoverImage({ response, params }: HttpContextContracR) {
+//     const filePath = app.makePath('storage/covers', params.fileName)
+//     return response.download(filePath)
+//   }
+// }
   /**
    * Show individual record
    * ini yang pas kita pencet 1 comic bakal nampilin detail comicnya
    * return detail comic, jumlah like, jumlah pembaca, episode
    * @all Users
    */
-  async show({ params, inertia  }: HttpContext) {
-    const comic = await Comic
-                       .query()
-                       .where('slug', params.slug)
-                       .preload('episodes', episodeQuery => {
-                         episodeQuery.where('isPublished', true)
-                        .orderBy('episodeNumber', 'asc')
+async show({ params, inertia, auth }: HttpContext) {
+  const user = auth.user
 
-                       })
-                       .preload('creators')
-                       .preload('comicGenres')
-                       .preload('comicRatings')
-                       .preload('comicFavorites')
-                       .firstOrFail()
+  const comic = await Comic.query()
+    .where('slug', params.slug)
+    .preload('episodes', q => q.where('isPublished', true))
+    .preload('comicGenres')
+    .preload('comicFavorites', q => user ? q.wherePivot('user_id', user.id) : q)
+    .preload('comicRatings', q => user ? q.wherePivot('user_id', user.id) : q)
+    .firstOrFail()
 
-    return inertia.render('comic/show', { comic })
-  }
+const userRating = user
+  ? await db
+      .from('comic_ratings')
+      .where('comic_id', comic.id)
+      .andWhere('user_id', user.id)
+      .first()
+      .then(r => r?.rating_value ?? 0)
+  : 0
+
+  return inertia.render('comic/show', {
+    comic: {
+      ...comic.serialize(),
+      isFavorited: comic.comicFavorites.length > 0,
+      userRating,
+    },
+  })
+}
   /**
    * Edit individual record
    * @creator
@@ -157,15 +179,15 @@ async update({ params, response, request, auth }: HttpContext) {
     .where('creator_id', creator.id)
     .firstOrFail()
 
-  // Ambil field
   const payload = request.only([
     'title',
     'description',
     'status',
-    'updateDay'
+    'updateDay',
+    'coverUrl'
   ])
 
-  const genreIds = request.input('genreIds') || []
+  const genreIds = request.input('genreIds') ?? []
 
   const cover = request.file('cover', {
     size: '4mb',
@@ -173,9 +195,26 @@ async update({ params, response, request, auth }: HttpContext) {
   })
 
   if (cover) {
+    if (!cover.isValid) {
+      return response.badRequest({ errors: cover.errors })
+    }
+
     const fileName = `${Date.now()}.${cover.extname}`
-    await cover.move('uploads/comics', { name: fileName })
-    payload.coverUrl = `/uploads/comics/${fileName}`
+
+    await cover.move(
+      app.makePath('storage/covers'),
+      { name: fileName }
+    )
+
+    if (comic.coverUrl) {
+      const oldPath = app.makePath(comic.coverUrl.replace('/storage/', 'storage/'))
+      try {
+        await fs.unlink(oldPath)
+      } catch {
+      }
+    }
+
+    payload.coverUrl = `/uploads/covers/${fileName}`
   }
 
   comic.merge(payload)
@@ -207,28 +246,13 @@ async rate({ params, auth, request, response }: HttpContext) {
   const ratingValue = Number(request.input('rating_value'))
 
   if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5) {
-    return response.badRequest({ message: 'Invalid rating value (0–5)' })
+    return response.badRequest()
   }
 
-  // cek apakah user sudah pernah kasih rating
-  const existing = await user
-    .related('userRating')
-    .query()
-    .where('comic_id', comic.id)
-    .first()
-
-  if (existing) {
-    // update rating di pivot
-    await user.related('userRating').sync(
-      { [comic.id]: { rating_value: ratingValue } },
-      false // false artinya jangan detach data lain
-    )
-  } else {
-    // buat rating baru
-    await user.related('userRating').attach({
-      [comic.id]: { rating_value: ratingValue },
-    })
-  }
+  await user.related('userRating').sync(
+    { [comic.id]: { rating_value: ratingValue } },
+    false
+  )
 
   return response.redirect().back()
 }
