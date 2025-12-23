@@ -92,7 +92,7 @@ export default class RegisterController {
       const verifyUrl =
         `${env.get('APP_URL')}/verify-email?token=${rawToken}`
 
-      await sendVerifyEmail(user, verifyUrl)
+      await sendVerifyEmail(user.email, verifyUrl)
 
 
       await trx.commit()
