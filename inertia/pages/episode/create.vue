@@ -9,7 +9,6 @@ const props = defineProps({
   }
 })
 
-// Inertia form
 const form = useForm({
   comicId: props.comic.id,
   title: '',
@@ -19,10 +18,8 @@ const form = useForm({
   coinPrice: '',
 })
 
-// Preview thumbnail
 const preview = ref<string | null>(null)
 
-// Handle file change
 const handleThumbnailChange = (e: Event) => {
   const target = e.target as HTMLInputElement
   const file = target.files?.[0] || null
@@ -30,10 +27,8 @@ const handleThumbnailChange = (e: Event) => {
   preview.value = file ? URL.createObjectURL(file) : null
 }
 
-// Submit form
 const submit = () => {
-  // Validasi lokal sebelum submit
-  form.clearErrors() // hapus error lama
+  form.clearErrors()
 
   if (form.episodeNumber !== null && Number(form.episodeNumber) < 1) {
     form.setError('episodeNumber', 'Number cannot be negative')

@@ -7,7 +7,7 @@ export default class LoginController {
     return inertia.render('auth/login')
   }
 
-async store({ request, response, auth, session, inertia }: HttpContext) {
+async store({ request, response, auth, inertia }: HttpContext) {
     const { username, password } = await request.validateUsing(loginValidator)
 
     try {

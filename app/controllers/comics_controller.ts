@@ -91,7 +91,7 @@ public async store({ request, response, auth }: HttpContext) {
       })
     }
 
-    return response.redirect().toRoute('/comic/index')
+  return response.redirect().toRoute('/comic/index')
   }
 
 //   public async showCoverImage({ response, params }: HttpContextContracR) {
@@ -107,7 +107,6 @@ public async store({ request, response, auth }: HttpContext) {
    */
 async show({ params, inertia, auth }: HttpContext) {
   const user = auth.user
-
   const comic = await Comic.query()
     .where('slug', params.slug)
     .preload('episodes', q => q.where('isPublished', true))
@@ -116,14 +115,9 @@ async show({ params, inertia, auth }: HttpContext) {
     .preload('comicRatings', q => user ? q.wherePivot('user_id', user.id) : q)
     .firstOrFail()
 
-const userRating = user
-  ? await db
-      .from('comic_ratings')
-      .where('comic_id', comic.id)
-      .andWhere('user_id', user.id)
-      .first()
-      .then(r => r?.rating_value ?? 0)
-  : 0
+  const userRating = comic.comicRatings.length > 0
+    ? comic.comicRatings[0].$extras.pivot_rating_value
+    : 0
 
   return inertia.render('comic/show', {
     comic: {
