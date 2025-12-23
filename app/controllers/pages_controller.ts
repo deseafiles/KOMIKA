@@ -136,17 +136,15 @@ public async update({ request, response }: HttpContext) {
   const pagesData = request.input('pages') || []
   const files = request.files('pages') || []
 
-  const outputDir = app.makePath('storage/pages')
+  const outputDir = app.makePath('storage/pages-comic')
   await fs.mkdir(outputDir, { recursive: true })
 
   for (const updateData of pagesData) {
     const page = await Page.find(updateData.id)
     if (!page) continue
 
-    // Update nomor halaman
     page.pageNumber = updateData.pageNumber
 
-    // Cari file baru untuk page ini
     const file = files.find(f => f.clientName === updateData.fileName)
     if (file && file.isValid) {
       const cleanName = file.clientName
@@ -157,30 +155,31 @@ public async update({ request, response }: HttpContext) {
       const tempDir = app.makePath('tmp/uploads')
       await fs.mkdir(tempDir, { recursive: true })
 
-      // Move file ke temp
       await file.move(tempDir, { name: fileName, overwrite: true })
       const tempPath = `${tempDir}/${fileName}`
 
-      // Ambil metadata
       const metadata = await sharp(tempPath).metadata()
       const imageWidth = metadata.width
       const imageHeight = metadata.height
 
-      // Resize dan simpan ke storage
+      if (imageWidth && imageHeight && (imageWidth > 1000 || imageHeight > 2280)) {
+        await fs.unlink(tempPath)
+        continue
+      }
+
+      const outputPath = `${outputDir}/${fileName}`
       await sharp(tempPath)
         .resize(800, 1280, { fit: 'inside' })
-        .toFile(`${outputDir}/${fileName}`)
+        .toFile(outputPath)
 
       await fs.unlink(tempPath)
 
-      // Hapus file lama jika ada
       if (page.imageUrl) {
         const oldPath = app.makePath(page.imageUrl.replace('/uploads/', 'storage/'))
         try { await fs.unlink(oldPath) } catch {}
       }
 
-      // Update URL image
-      page.imageUrl = `/uploads/pages/${fileName}`
+      page.imageUrl = `/uploads/pages-comic/${fileName}`
       page.imageWidth = imageWidth
       page.imageHeight = imageHeight
     }
