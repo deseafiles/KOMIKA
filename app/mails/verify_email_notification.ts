@@ -16,7 +16,7 @@ export default class VerifyEmailNotification extends BaseMail {
     this.message
       .to(this.user.email)
       .from(
-        env.get('MAIL_FROM_ADDRESS'),
+        env.get('MAIL_FROM_ADDRESS') || "webkomika@gmail.com",
         env.get('MAIL_FROM_NAME')
       )
       .htmlView('emails/verify', {
