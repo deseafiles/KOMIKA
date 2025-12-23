@@ -11,7 +11,7 @@ export class MidtransService {
 
   constructor() {
     this.snap = new Midtrans.Snap({
-      isProduction: process.env.MIDTRANS_PRODUCTION === 'true' || false,
+      isProduction : String(process.env.MIDTRANS_PRODUCTION).toLowerCase() === 'true' || false,
       serverKey: process.env.MIDTRANS_SERVER_KEY,
       clientKey: process.env.MIDTRANS_CLIENT_KEY,
     })

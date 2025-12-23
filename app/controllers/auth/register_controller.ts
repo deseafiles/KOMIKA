@@ -8,22 +8,18 @@ import crypto from 'node:crypto'
 import { DateTime } from 'luxon'
 
 export default class RegisterController {
-
   async index({ inertia }: HttpContext) {
     return inertia.render('auth/register')
   }
-
 
   async store({ request, response, inertia }: HttpContext) {
     const { email, username, password } =
       await request.validateUsing(registerValidator)
 
-
     const existingUser = await User.findBy('email', email)
 
     if (existingUser) {
       if (!existingUser.isVerified) {
-        // hapus token lama
         await db
           .from('email_verifications')
           .where('user_id', existingUser.id)
@@ -58,12 +54,10 @@ export default class RegisterController {
         },
       })
     }
-
  
     const trx = await db.transaction()
 
     try {
-
       const user = await User.create(
         {
           email,
@@ -73,14 +67,11 @@ export default class RegisterController {
         },
         { client: trx }
       )
-
-
       const rawToken = crypto.randomBytes(32).toString('hex')
       const hashedToken = crypto
         .createHash('sha256')
         .update(rawToken)
         .digest('hex')
-
 
       await trx.table('email_verifications').insert({
         user_id: user.id,
