@@ -55,7 +55,6 @@ const handlePurchaseSuccess = (message: string) => {
   }, 5000)
 }
 
-// Tombol Back
 const goBack = () => {
   window.history.back()
 }
@@ -150,12 +149,15 @@ const goBack = () => {
         Logout
       </button>
 
+    <div
+      v-if="userData?.creator">
       <Link
         :href="`/profile/edit/${userData?.username}`"
         class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow transition font-medium w-full sm:w-auto text-center"
       >
         Edit Data
       </Link>
+    </div>
     </div>
 
     <!-- Coin Packages List -->

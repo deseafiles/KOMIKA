@@ -27,6 +27,10 @@ const handleSubmit = () => {
     onFinish: () => form.reset('password'),
   })
 }
+
+const toHome =() => {
+  form.get('/')
+}
 </script>
 
 <template>
@@ -76,7 +80,14 @@ const handleSubmit = () => {
           <span v-if="form.processing" class="animate-pulse">Memproses...</span>
           <span v-else>Login</span>
         </button>
-
+        <!-- Tombol Batalkan -->
+        <button
+          type="button"
+          @click="toHome"
+          class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition mt-2"
+        >
+          Batalkan
+        </button>
         <!-- Link ke register -->
         <p class="text-center text-sm mt-4 text-gray-600">
           Belum punya akun?
