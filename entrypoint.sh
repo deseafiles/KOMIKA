@@ -1,9 +1,8 @@
 #!/bin/sh
+set -e
 
-echo "Waiting for Postgres..."
-sleep 5
-
+echo "Running database migrations..."
 node ace migration:run --force
 node ace db:seed
-
-node ace serve
+echo "Starting application server..."
+node ./bin/server.js
