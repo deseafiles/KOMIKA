@@ -40,22 +40,21 @@ export default class RegisterController {
 
         const verifyUrl =
           `${env.get('APP_URL')}/verify-email?token=${rawToken}`
-
         await sendVerifyEmail(existingUser.email, verifyUrl)
+
 
         return inertia.render('auth/verifyNotice', {
           email,
           resend: true,
         })
       }
-
       return inertia.render('auth/register', {
         errors: {
           email: 'Email sudah terdaftar',
         },
       })
     }
-
+ 
     const trx = await db.transaction()
 
     try {
@@ -68,7 +67,6 @@ export default class RegisterController {
         },
         { client: trx }
       )
-
       const rawToken = crypto.randomBytes(32).toString('hex')
       const hashedToken = crypto
         .createHash('sha256')
