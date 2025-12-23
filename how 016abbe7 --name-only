@@ -1,0 +1,299 @@
+[33mcommit 5693a54475231d65056bed8e47763b326684c12d[m[33m ([m[1;36mHEAD -> [m[1;32mproblem[m[33m, [m[1;32mprod[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 15:15:22 2025 +0800
+
+    fix: remove env files and clean commit
+
+[33mcommit 016abbe70a8d9a2294ff38d5418efe9addb7f2e7[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 15:11:20 2025 +0800
+
+    fix
+
+[33mcommit de0c95cec9c6f06c9144b43d2364f26523d7bd87[m[33m ([m[1;31morigin/problem[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 14:03:34 2025 +0800
+
+    fix email verif
+
+[33mcommit 82f312e5d9e4459666bd777b64345f6c91a131f7[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 11:36:48 2025 +0800
+
+    fix email verif
+
+[33mcommit ebfcb08fd1dca30f9bb8172dc85988c68d4554f5[m
+Merge: 7c036ee7 9ea69768
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 09:23:18 2025 +0800
+
+    Merge branch 'main' into problem
+
+[33mcommit 7c036ee72491180f98b3291a9df75493659ce5f9[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 23 09:23:02 2025 +0800
+
+    fix
+
+[33mcommit 640fcae7c63445995fa8a6415bdf032bb1f5eea8[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Mon Dec 22 19:12:55 2025 +0800
+
+    fix drive storage
+
+[33mcommit e01972dd65fa92c9515f9caf3be5d00ee639f609[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Dec 19 14:39:47 2025 +0800
+
+    fix docker
+
+[33mcommit d9b0a83a6d49df42b785c58e9b249b0ad85afd94[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 16 19:53:34 2025 +0800
+
+    add docker for prod -wip
+
+[33mcommit dcd90cff2062096aa50bcb08a0a82724d99c87b5[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Mon Dec 15 14:31:20 2025 +0800
+
+    fix mailer
+
+[33mcommit c863b7a8a7f20916e09d41b9c794fb9a5485cb87[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 9 23:48:50 2025 +0800
+
+    fix form
+
+[33mcommit 9ea6976875d200fc6a64ec25ff793fdfa6daa835[m[33m ([m[1;32mmain[m[33m)[m
+Merge: 659ccd29 7fe4f52f
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 9 22:42:04 2025 +0800
+
+    Merge branch 'problem'
+
+[33mcommit dc9d102bb21cf41d9af9c1e10e906b3718e0bc1d[m[33m ([m[1;31morigin/UsersBan[m[33m, [m[1;32mUsersBan[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Dec 9 22:40:58 2025 +0800
+
+    fix paginate
+
+[33mcommit 6f9ea98b95fe6e56e9e5b680124d453001ac83c7[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Nov 28 20:43:57 2025 +0800
+
+    add middleware for banned user
+
+[33mcommit 7fe4f52fa095fe1b4a2efb661025808ab6add842[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Nov 28 20:01:50 2025 +0800
+
+    add back button in every page
+
+[33mcommit b551119a903e7cffd8aa4edb7556a5e64ec04d68[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Nov 28 11:29:43 2025 +0800
+
+    add midtrans payment closed #1
+
+[33mcommit a47ad75e086cd54445491f0d7b0397f09514aeae[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sun Nov 23 11:29:24 2025 +0800
+
+    fix top await error
+
+[33mcommit 3b0bdebc3aba99ccaa8a7e5104122a7d6a39eba4[m[33m ([m[1;32mngrok[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sat Nov 22 17:35:19 2025 +0800
+
+    add payment gateaway closed #1
+
+[33mcommit 6ec62756eba25aac0964c88e2ee1b57dbf310885[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sat Nov 22 13:12:07 2025 +0800
+
+    fix home
+
+[33mcommit 4285c8eddf958b8de94c7b7976209efbe818e8a2[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Nov 21 15:57:15 2025 +0800
+
+    add like comment feature
+
+[33mcommit fd9f85808eb42ddb45f0413ed3a4a8512eb4e50a[m[33m ([m[1;32mfix-scroll[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Nov 21 15:22:25 2025 +0800
+
+    wip payment gateaway
+
+[33mcommit 659ccd2905a2b12a9cf7bf7f889ece6b04f97e81[m[33m ([m[1;31morigin/main[m[33m)[m
+Merge: 5df85746 fc500fc7
+Author: Shabrina Alya Aureliya <165859494+deseafiles@users.noreply.github.com>
+Date:   Thu Nov 20 13:34:44 2025 +0800
+
+    Merge pull request #20 from deseafiles/fix-scroll
+    
+    Fix scroll
+
+[33mcommit fc500fc74a0cb945f29237bb6453503c35097e11[m[33m ([m[1;31morigin/fix-scroll[m[33m)[m
+Merge: 6e9aae96 5df85746
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Thu Nov 20 13:31:59 2025 +0800
+
+    Merge branch 'fe' into HEAD
+
+[33mcommit 6e9aae96c9cd66bef9f70d308eababec337c9f80[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Thu Nov 20 13:31:37 2025 +0800
+
+    migrate
+
+[33mcommit 5df85746f4286aa5a79927f39ca3c687f2c5ce47[m[33m ([m[1;31morigin/fe[m[33m, [m[1;32mfe[m[33m)[m
+Merge: 85b3a4f1 f9603d19
+Author: Shabrina Alya Aureliya <165859494+deseafiles@users.noreply.github.com>
+Date:   Thu Nov 20 12:59:38 2025 +0800
+
+    Merge pull request #19 from deseafiles/infinite-scroll
+    
+    Infinite scroll
+
+[33mcommit f9603d1938aa00dd5f5f2b57b81e35e10799eec7[m[33m ([m[1;31morigin/infinite-scroll[m[33m)[m
+Merge: cdb27525 85b3a4f1
+Author: Shabrina Alya Aureliya <165859494+deseafiles@users.noreply.github.com>
+Date:   Thu Nov 20 12:59:18 2025 +0800
+
+    Merge pull request #18 from deseafiles/main
+    
+    add license
+
+[33mcommit 85b3a4f18dd96655e4d5f99d5d05f650d1339d48[m
+Merge: 47eaf8bf 95963eab
+Author: Shabrina Alya Aureliya <165859494+deseafiles@users.noreply.github.com>
+Date:   Thu Nov 20 12:56:25 2025 +0800
+
+    Merge pull request #17 from deseafiles/fe
+    
+    Fe
+
+[33mcommit cdb2752526bfe903269705fddd35d706f7bb8e0c[m[33m ([m[1;32minfinite-scroll[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Nov 18 15:07:02 2025 +0800
+
+    add coin feature in profile page
+
+[33mcommit 0624c0a190138e3bcf34792adb7815585ca59a35[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Nov 18 14:22:34 2025 +0800
+
+    add infinite scrolling for pages and make feature to add pages in episode
+
+[33mcommit 95963eab74e6f18121526029e671855d763273f9[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sat Nov 15 11:53:26 2025 +0800
+
+    add comic management for creator closed #15
+
+[33mcommit f704595a7c3cab6de971c817f67e75a8b3fbd7ed[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Wed Nov 12 16:42:37 2025 +0800
+
+    add 'Komik Saya' in navbar closed #15
+
+[33mcommit 47eaf8bfc5e0b7d0bce4f7bca8d046921524193a[m
+Merge: 69057720 2acc5731
+Author: Shabrina Alya Aureliya <165859494+deseafiles@users.noreply.github.com>
+Date:   Wed Nov 12 13:52:52 2025 +0800
+
+    Merge pull request #14 from deseafiles/fe
+    
+    add ui for admin dashboard (WIP -- usermanagement) closed #13
+
+[33mcommit 2acc5731b4531dd1901989e0d91079d7d91fd02d[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Wed Nov 12 13:49:25 2025 +0800
+
+    add ui for admin dashboard (WIP -- usermanagement) closed #13
+
+[33mcommit 690577205e5419910500823656385fcc1bc4fb78[m
+Author: Shabrina Alya Aureliya <165859494+deseafiles@users.noreply.github.com>
+Date:   Wed Nov 12 13:46:05 2025 +0800
+
+    Create LICENSE
+
+[33mcommit 88bf980fe9f5d1dfc146f506f389fa49052a6d6a[m
+Merge: 3f28830f 3f6dbc9d
+Author: Shabrina Alya Aureliya <165859494+deseafiles@users.noreply.github.com>
+Date:   Tue Nov 4 15:19:22 2025 +0800
+
+    Merge pull request #11 from deseafiles/fe
+    
+    fixed the #9 issue to change the login button into profile button where the users login sucessfuly
+
+[33mcommit 3f6dbc9dc26529b28731200f2d2ca4eb8bc8b24e[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Tue Nov 4 15:17:08 2025 +0800
+
+    resolved #9
+
+[33mcommit d612bb009079528d91d092702689c8128bb11954[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sun Nov 2 21:24:14 2025 +0800
+
+    (feat) add show comic feature can like and give rating the comic
+
+[33mcommit ee8b92e192a4aedefe558751aca256df9f11e86b[m[33m ([m[1;31morigin/mail_verify[m[33m, [m[1;32mmail_verify[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Wed Oct 29 22:45:18 2025 +0800
+
+    1. Melakukan testing mail_verify
+    2. Menambah controller dashboard untuk admin
+    3. Menambah page controller (not testing yet)
+    4. Integrasi dengan mailgun (testing done)
+
+[33mcommit 767515e052dc00dbeaa1f48da5cf2f522aadfa27[m[33m ([m[1;32mfix/comic[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sun Oct 26 12:41:18 2025 +0800
+
+    fix home controller and home.vue
+
+[33mcommit 723c66bdf0d591827a036dfdba36115a4f5a0870[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sat Oct 25 22:20:06 2025 +0800
+
+    fix ComicController and EpisodeController
+
+[33mcommit b696f2526344d6f333a120e024cb149fe2cf087b[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Sat Oct 25 20:49:25 2025 +0800
+
+    add midtrans service payment
+
+[33mcommit 9367772f1c40da20e7d2fb00141bd7ffa35b9110[m[33m ([m[1;31morigin/comic[m[33m, [m[1;32mcomic[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Wed Oct 22 13:35:22 2025 +0800
+
+    fix method store comic
+
+[33mcommit b02c33965f6d5a9405c3600462035bca94bbb3bb[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Mon Oct 13 19:32:19 2025 +0800
+
+    add genre controller
+
+[33mcommit 2cd40fc23f6b35cb08c6185ae78ef77d756b2297[m[33m ([m[1;31morigin/auth[m[33m, [m[1;32mauth[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Mon Oct 13 18:08:21 2025 +0800
+
+    fix auth for register, login and logout
+
+[33mcommit 3f28830f1bd16bc0b299e917d02fa96e4675ce8a[m[33m ([m[1;32mMaster[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Oct 10 22:07:01 2025 +0800
+
+    test
+
+[33mcommit 74afbc30a038da7af1a4cfc44a0ebbbb2680f288[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: deseafiles <shabrina.bhicci@gmail.com>
+Date:   Fri Oct 10 21:45:36 2025 +0800
+
+    first commit
