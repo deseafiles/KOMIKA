@@ -115,7 +115,7 @@ async show({ params, inertia, auth }: HttpContext) {
     .preload('comicRatings', q => user ? q.wherePivot('user_id', user.id) : q)
     .firstOrFail()
 
-  const userRating = comic.comicRatings.length > 0
+  const userRating = user && comic.comicRatings.length > 0
     ? comic.comicRatings[0].$extras.pivot_rating_value
     : 0
 
