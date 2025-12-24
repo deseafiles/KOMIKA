@@ -109,7 +109,7 @@ router
     router.get('/index', [ComicsController, 'index']).use(middleware.auth())
     router.get('/create', [ComicsController, 'create']).use(middleware.auth())
     router.post('/store', [ComicsController, 'store']).use(middleware.auth())
-    router.get('/show/:slug', [ComicsController, 'show'])
+    router.get('/show/:slug', [ComicsController, 'show']).use(middleware.silentAuth())
     router.put('/update/:slug', [ComicsController, 'update']).use(middleware.auth())
     router.get('/edit/:slug', [ComicsController, 'edit']).use(middleware.auth())
     router.delete('/destroy/:slug', [ComicsController, 'destroy']).use(middleware.auth())
