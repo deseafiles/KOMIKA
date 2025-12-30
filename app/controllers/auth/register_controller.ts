@@ -19,6 +19,7 @@ export default class RegisterController {
 
     if (existingUser) {
       if (!existingUser.isVerified) {
+        // Hapus token verifikasi lama
         await db
           .from('email_verifications')
           .where('user_id', existingUser.id)
@@ -27,6 +28,7 @@ export default class RegisterController {
         const token = await createVerificationToken(existingUser.id)
         const verifyUrl = `${env.get('APP_URL')}/verify-email?token=${token}`
 
+        // Kirim ulang email verifikasi via Gmail API
         sendVerifyEmail(existingUser.email, verifyUrl).catch(console.error)
 
         return inertia.render('auth/verifyNotice', {
@@ -58,6 +60,7 @@ export default class RegisterController {
     const token = await createVerificationToken(user.id)
     const verifyUrl = `${env.get('APP_URL')}/verify-email?token=${token}`
 
+    // Kirim email verifikasi via Gmail API
     sendVerifyEmail(user.email, verifyUrl).catch(console.error)
 
     return inertia.render('auth/verifyNotice', { email })
