@@ -205,7 +205,7 @@ router.post('/episodes/:id/buy', [PurchasesController, 'buyEpisode']).use(middle
 
 // router.get('/test-email', async () => {
 //   await sendVerifyEmail(
-//     'shabrinaalya.ptbsr@gmail.com',
+//     '11231090@student.itk.ac.id',
 //     'http://127.0.0.1:3333/login'
 //   )
 //   return 'OK'
