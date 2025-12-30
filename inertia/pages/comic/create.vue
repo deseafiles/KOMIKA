@@ -110,7 +110,7 @@ const goBack = () => {
               v-model="form.genreIds[0]"
               class="w-1/2 rounded-lg border border-gray-300 px-4 py-2"
             >
-              <option value="">Genre 1</option>
+              <option disabled value="">Genre 1</option>
               <option v-for="g in genres" :key="g.id" :value="g.id">
                 {{ g.name }}
               </option>
@@ -120,7 +120,7 @@ const goBack = () => {
               v-model="form.genreIds[1]"
               class="w-1/2 rounded-lg border border-gray-300 px-4 py-2"
             >
-              <option value="">Genre 2</option>
+              <option disabled value="">Genre 2</option>
               <option v-for="g in genres" :key="g.id" :value="g.id">
                 {{ g.name }}
               </option>

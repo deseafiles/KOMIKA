@@ -62,7 +62,7 @@ const logout = () => {
 
               <!-- Komik Saya / Statistik Platform -->
               <Link
-                :href="user.isAdmin ? '/admin' : '/comic/index'"
+                :href="user.isAdmin ? '/admin/statistik' : '/comic/index'"
                 class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700"
               >
                 {{ user.isAdmin ? 'Statistik Platform' : 'Komik Saya' }}

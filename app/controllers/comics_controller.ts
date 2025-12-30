@@ -14,7 +14,7 @@ export default class ComicsController {
    * Display a list of resource
    * @creator
    */
-async index({ inertia, auth }: HttpContext) {
+async index({ inertia, auth, request, response }: HttpContext) {
   const creator = await Creator
     .query()
     .where('user_id', auth.user!.id)
@@ -25,6 +25,11 @@ async index({ inertia, auth }: HttpContext) {
     .where('creator_id', creator.id)
     .preload('comicGenres')
 
+  if (request.accepts(['json'])) {
+    return response.ok({
+      message: 'Daftar komik berhasil diambil',
+    })
+  }
   return inertia.render('comic/index', {
     listComicByCreator: listComicByCreator.map(c => ({
       ...c.toJSON(),
@@ -115,7 +120,7 @@ async show({ params, inertia, auth }: HttpContext) {
     .preload('comicRatings', q => user ? q.wherePivot('user_id', user.id) : q)
     .firstOrFail()
 
-  const userRating = comic.comicRatings.length > 0
+  const userRating = user && comic.comicRatings.length > 0
     ? comic.comicRatings[0].$extras.pivot_rating_value
     : 0
 

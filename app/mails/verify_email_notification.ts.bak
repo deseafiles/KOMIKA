@@ -6,7 +6,7 @@ const resend = new Resend(env.get('RESEND_API_KEY'))
 export async function sendVerifyEmail(to: string, url: string) {
   try {
     const result = await resend.emails.send({
-      from: 'webkomika@gmail.com',
+      from: 'webkomika.dedyn.io',
       to,
       subject: 'Verify your email',
       html: `<a href="${url}">Verify</a>`,

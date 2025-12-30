@@ -133,14 +133,14 @@ export default class Episode extends BaseModel {
     episode.isPremium = episode.coinPrice > 0
   }
 
-  @beforeSave()
-  static async changeIsPublish(episode: Episode) {
-    if (!episode.publishedAt) {
-      episode.isPublished = false
-      return
-    }
-
-    const now = DateTime.now()
-    episode.isPublished = episode.publishedAt <= now
-  }
+  // @beforeSave()
+  // static async changeIsPublish(episode: Episode) {
+  //   if (!episode.publishedAt) {
+  //     episode.isPublished = false
+  //     return
+  //   }
+  //
+  //   const now = DateTime.now()
+  //   episode.isPublished = episode.publishedAt <= now
+  // }
 }

@@ -36,7 +36,7 @@ export default class DashboardAdminsController {
   }
 
   async getAllUsers({ inertia }: HttpContext) {
-    const users = await User.all()
+    const users = await User.query().where('isVerified', true)
 
     return inertia.render('admin/UserManagement/users', {users})
   }

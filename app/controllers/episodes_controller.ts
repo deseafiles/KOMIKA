@@ -76,6 +76,7 @@ async store({ request, response, params }: HttpContext) {
     episodeNumber,
     publishedAt,
     coinPrice,
+    isPublished
   } = await request.validateUsing(createEpisodeValidator)
 
   const comic = await Comic.findByOrFail('slug', params.slug)
@@ -102,6 +103,7 @@ async store({ request, response, params }: HttpContext) {
     thumbnailUrl: thumbnailPath || 'null',
     coinPrice,
     comicId: comic.id,
+    isPublished,
   })
 
   return response.redirect().toPath(`/episode/${comic.slug}/index`)
@@ -187,6 +189,7 @@ public async update({ params, request, response, bouncer }: HttpContext) {
     coinPrice: payload.coinPrice,
     publishedAt: payload.publishedAt,
     ...(thumbnailPath ? { thumbnailUrl: thumbnailPath } : {}),
+    isPublished: payload.isPublished,
   }
 
   await episode.merge(mergePayload).save()

@@ -1,6 +1,10 @@
+import sendVerifyEmail from '#mails/sendVerifyEmail'
 import User from '#models/user'
 import { registerValidator } from '#validators/auth'
 import type { HttpContext } from '@adonisjs/core/http'
+import env from '#start/env'
+import db from '@adonisjs/lucid/services/db'
+import { createVerificationToken } from '#services/EmailVerificationService'
 
 export default class RegisterController {
   async index({ inertia }: HttpContext) {
@@ -14,35 +18,48 @@ export default class RegisterController {
     const existingUser = await User.findBy('email', email)
 
     if (existingUser) {
-      return inertia.render('auth/register', {
-        errors: {
-          email: 'Email sudah terdaftar',
-        },
-      })
-    }
+      if (!existingUser.isVerified) {
+        await db
+          .from('email_verifications')
+          .where('user_id', existingUser.id)
+          .delete()
 
-    try {
-      const user = await User.create({
-        email,
-        username,
-        password,
-        isVerified: true,
-      })
+        const token = await createVerificationToken(existingUser.id)
+        const verifyUrl = `${env.get('APP_URL')}/verify-email?token=${token}`
 
-      if (request.accepts(['json'])) {
-        return response.created({
-          message: 'User registered successfully.',
-          user,
+        sendVerifyEmail(existingUser.email, verifyUrl).catch(console.error)
+
+        return inertia.render('auth/verifyNotice', {
+          email,
+          resend: true,
         })
       }
 
-      return response.redirect().toPath('/')
-    } catch (error) {
-      console.error(error)
-      return response.internalServerError({
-        message: 'Gagal membuat user',
+      return inertia.render('auth/register', {
+        errors: { email: 'Email sudah terdaftar' },
       })
     }
+
+    const trx = await db.transaction()
+
+    let user
+    try {
+      user = await User.create(
+        { email, username, password, isVerified: false },
+        { client: trx }
+      )
+
+      await trx.commit()
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
+
+    const token = await createVerificationToken(user.id)
+    const verifyUrl = `${env.get('APP_URL')}/verify-email?token=${token}`
+
+    sendVerifyEmail(user.email, verifyUrl).catch(console.error)
+
+    return inertia.render('auth/verifyNotice', { email })
   }
 }
-

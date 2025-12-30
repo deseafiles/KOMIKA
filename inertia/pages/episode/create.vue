@@ -16,6 +16,7 @@ const form = useForm({
   publishedAt: '',
   thumbnailUrl: null,
   coinPrice: '',
+  isPublished: false,
 })
 
 const preview = ref<string | null>(null)
@@ -121,6 +122,20 @@ const submit = () => {
             class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
           />
           <span v-if="form.errors.coinPrice" class="text-red-500 text-sm">{{ form.errors.coinPrice }}</span>
+        </div>
+
+        <!-- Status Published -->
+        <div>
+          <label class="block font-medium text-gray-700 mb-1">Status Published</label>
+          <select
+            v-model="form.isPublished"
+            placeholder="Masukkan Status Terbit"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition"
+          >
+            <option disabled value="">Please select one</option>
+            <option :value="true">Publish</option>
+            <option :value="false">Draft</option>
+          </select>
         </div>
 
         <!-- Tombol Aksi -->

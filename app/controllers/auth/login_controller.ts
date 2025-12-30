@@ -3,7 +3,7 @@ import User from '#models/user'
 import { loginValidator } from '#validators/auth'
 
 export default class LoginController {
-  async index({ inertia }: HttpContext) {
+  async index({ inertia, response, request }: HttpContext) {
     return inertia.render('auth/login')
   }
 

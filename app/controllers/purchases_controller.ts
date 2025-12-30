@@ -49,8 +49,20 @@ export default class PurchasesController {
         })
       }
 
-      const creatorShare = Math.floor(price * 0.7)
-      const platformShare = price - creatorShare
+      const totalRevenue = price * 2000
+      const creatorShare = Math.floor(totalRevenue * 0.7)
+      const platformShare = totalRevenue - creatorShare
+
+      if (episode.comics?.creatorId) {
+        const creator = await Creator.query()
+          .where('id', episode.comics.creatorId)
+          .first()
+
+        if (creator) {
+          creator.totalEarning = (parseFloat(creator.totalEarning) || 0) + creatorShare
+          await creator.save()
+        }
+      }
 
       wallet.coinBalance -= price
       wallet.totalSpent = (wallet.totalSpent || 0) + price
@@ -65,23 +77,7 @@ export default class PurchasesController {
         creatorShare,
       })
 
-      if (episode.comics?.creatorId) {
-        const creator = await Creator.query()
-          .where('id', episode.comics.creatorId)
-          .preload('users', (q) => q.preload('userWallet'))
-          .first()
-
-        if (creator?.users?.userWallet) {
-          creator.users.userWallet.coinBalance += creatorShare
-          creator.users.userWallet.totalPurchased =
-            (creator.users.userWallet.totalPurchased || 0) + creatorShare
-
-          await creator.users.userWallet.save()
-        }
-      }
-
       return response.redirect(`/episode/${comicSlug}/show/${episodeSlug}`)
-
     } catch (error) {
       console.error('❌ Error buying episode:', error)
 
