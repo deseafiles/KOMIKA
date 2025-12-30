@@ -6,7 +6,7 @@
 | The routes file is used for defining the HTTP routes.
 |
 */
-import sendVerifyEmail from '#mails/verify_email_notification'
+import sendVerifyEmail from '#mails/sendVerifyEmail'
 import LoginController from '#controllers/auth/login_controller'
 import RegisterController from '#controllers/auth/register_controller'
 import ComicsController from '#controllers/comics_controller'
@@ -203,11 +203,10 @@ router.post('/episodes/:id/buy', [PurchasesController, 'buyEpisode']).use(middle
 //
 
 
-// router.get('/test-email', async ({ response }) => {
+// router.get('/test-email', async () => {
 //   await sendVerifyEmail(
-//     'webkomika@gmail.com',
-//     'http://127.0.0.1:36437/verify/test'
+//     'shabrinaalya.ptbsr@gmail.com',
+//     'http://127.0.0.1:3333/login'
 //   )
-//
-//   return response.send('OK')
+//   return 'OK'
 // })

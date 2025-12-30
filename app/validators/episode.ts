@@ -11,6 +11,7 @@ export const createEpisodeValidator = vine.compile(
         extnames: ['jpg', 'jpeg', 'png', 'webp'],
       }),
     coinPrice: vine.number().min(0),
+    isPublished: vine.boolean()
   })
 )
 
@@ -27,6 +28,7 @@ export const updateEpisodeValidator = vine.compile(
     title: vine.string().maxLength(30).optional(),
     episodeNumber: vine.number().min(1).optional(), // integer positif
     publishedAt: vine.string().optional(),
+    isPublished: vine.boolean().optional(),
     coinPrice: vine.number().min(0).optional(),
     thumbnailUrl: vine.file({
       size: '5mb',

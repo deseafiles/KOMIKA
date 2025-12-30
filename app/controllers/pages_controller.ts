@@ -80,7 +80,7 @@ async store({ request, response, params }: HttpContext) {
     const imageWidth = metadata.width
     const imageHeight = metadata.height
 
-    if (imageWidth && imageHeight && (imageWidth > 1000 || imageHeight > 2280)) {
+    if (imageWidth && imageHeight && (imageWidth > 800 || imageHeight > 1280)) {
       return response.badRequest(
         `Gambar ${image.clientName} terlalu besar (${imageWidth}x${imageHeight})`
       )

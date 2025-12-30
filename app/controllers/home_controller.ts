@@ -26,6 +26,7 @@ async savedComic({ inertia, auth, response }: HttpContext) {
 
   const favoriteComic = await Comic
     .query()
+    .where('isDeleted', false)
     .join('comic_favorites', 'comic_favorites.comic_id', 'comics.id')
     .where('comic_favorites.user_id', user.id)
     .preload('comicGenres')
@@ -42,6 +43,7 @@ async search({ request, inertia }: HttpContext) {
 
   const comics = await Comic
     .query()
+    .where('isDeleted', false)
     .where((query) => {
       query
         .where('title', 'like', `%${keyword}%`)
