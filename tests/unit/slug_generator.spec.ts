@@ -10,7 +10,7 @@ let creatorId: number
 test.group('Comic.slugify', (group) => {
   group.each.setup(async () => {
     await db.beginGlobalTransaction()
-
+    await Comic.query().delete()
     const user = await User.create({
       email: 'test@example.com',
       password: 'password',
